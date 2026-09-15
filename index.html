@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Plan - 勉強計画</title>
+    <style>
+        :root {
+            --bg-color: #f7f8fa;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-sub: #718096;
+            --border-color: #e2e8f0;
+            
+            /* くすみカラーパレット */
+            --color-eng: #d98895;      /* くすみピンク (英語) */
+            --color-hist: #7c9d8e;     /* くすみ緑 (日本史) */
+            --color-jp: #e09f6e;       /* くすみオレンジ (国語) */
+            
+            --color-gen: #e8a87c;      /* 現代文 */
+            --color-kob: #c98ca6;      /* 古文 */
+            --color-kan: #93b7be;      /* 漢文 */
+            
+            --primary: #5c6ac4;
+            --primary-hover: #4754ab;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            color: #2d3748;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            color: #4a5568;
+            margin-top: 0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        /* フォーム周り */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 500px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 15px;
+            background: #fff;
+            color: var(--text-main);
+            box-sizing: border-box;
+        }
+
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-sub {
+            background-color: #edf2f7;
+            color: #4a5568;
+            font-size: 0.85rem;
+            padding: 5px 10px;
+            width: auto;
+        }
+        .btn-sub:hover {
+            background-color: #e2e8f0;
+        }
+
+        /* タスクリスト */
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: #fafbfc;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s;
+        }
+
+        li.completed {
+            background: #f1f5f9;
+            opacity: 0.6;
+        }
+
+        li.completed span.task-text {
+            text-decoration: line-through;
+            color: var(--text-sub);
+        }
+
+        .task-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        /* バッジ（科目・ジャンルタグ） */
+        .badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .badge-eng { background-color: var(--color-eng); }
+        .badge-hist { background-color: var(--color-hist); }
+        .badge-jp-gen { background-color: var(--color-gen); }
+        .badge-jp-kob { background-color: var(--color-kob); }
+        .badge-badge-kan { background-color: var(--color-kan); }
+        /* フォールバック用 */
+        .badge-jp { background-color: var(--color-jp); }
+
+        .task-text {
+            word-break: break-all;
+            font-size: 0.95rem;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #a0aec0;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .delete-btn:hover {
+            background-color: #fed7d7;
+            color: #e53e3e;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+        .section-header h2 {
+            margin: 0;
+            border: none;
+            padding: 0;
+        }
+
+        .empty-msg {
+            color: var(--text-sub);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 10px 0;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🎯 勉強計画タスク</h1>
+        <p>今日も一日、自分のペースで積み上げよう</p>
+    </header>
+
+    <!-- 毎日やること（ルーティン）セクション -->
+    <div class="card">
+        <div class="section-header">
+            <h2>🔥 毎日やること（ルーティン）</h2>
+            <button class="btn btn-sub" onclick="openRoutineModal()">ルーティン編集</button>
+        </div>
+        <ul id="routineList"></ul>
+    </div>
+
+    <!-- タスク追加カード -->
+    <div class="card">
+        <h2>✏️ タスク・参考書を追加</h2>
+        <div class="form-grid">
+            <select id="timeSlot">
+                <option value="am">🌅 午前</option>
+                <option value="pm">🌙 午後</option>
+            </select>
+            <select id="subject" onchange="updateSubCategory()">
+                <option value="eng">英語（くすみピンク）</option>
+                <option value="hist">日本史（くすみ緑）</option>
+                <option value="jp">国語（くすみオレンジ）</option>
+            </select>
+        </div>
+        <div class="form-grid" style="margin-bottom: 10px;">
+            <select id="subCategory">
+                <!-- 動的に変わります -->
+            </select>
+            <input type="text" id="taskInput" placeholder="例：システム英単語 1〜3章">
+        </div>
+        <button class="btn" onclick="addTask()">計画に追加する</button>
+    </div>
+
+    <!-- 午前タスク -->
+    <div class="card">
+        <h2>🌅 午前タスク</h2>
+        <ul id="amList"></ul>
+    </div>
+
+    <!-- 午後タスク -->
+    <div class="card">
+        <h2>🌙 午後タスク</h2>
+        <ul id="pmList"></ul>
+    </div>
+
+    <!-- ルーティン編集用簡易プロンプト（モーダル代わり） -->
+    <div class="card" id="routineEditCard" style="display:none; background: #fffaf0; border: 1px dashed var(--color-jp);">
+        <h2>⚙️ 毎日やるコト（ルーティン）の管理</h2>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <input type="text" id="routineInput" placeholder="例：英単語 30分 / 漢字マスターなど">
+            <button class="btn" style="width: auto;" onclick="addRoutineDef()">追加</button>
+        </div>
+        <ul id="routineDefList" style="margin-bottom: 10px;"></ul>
+        <button class="btn btn-sub" onclick="closeRoutineModal()">閉じる</button>
+    </div>
+
+    <script>
+        // --- 初期データ構造 ---
+        // デフォルトのルーティン項目（毎日やること）
+        let routineDefs = JSON.parse(localStorage.getItem('study_routine_defs')) || [
+            { id: 1, text: '英単語チェック' },
+            { id: 2, text: '日本史一問一答' }
+        ];
+
+        // 本日の日付（日付が変わったらルーティンのチェックをリセットするため）
+        const todayStr = new Date().toDateString();
+        let lastDate = localStorage.getItem('study_last_date') || todayStr;
+
+        let tasks = JSON.parse(localStorage.getItem('study_tasks_v2')) || [];
+        let routineStatus = JSON.parse(localStorage.getItem('study_routine_status')) || {};
+
+        // 日付が変わっていたらルーティンのチェックをリセット
+        if (lastDate !== todayStr) {
+            routineStatus = {};
+            localStorage.setItem('study_last_date', todayStr);
+        }
+
+        // 科目に合わせたサブカテゴリの切り替え
+        function updateSubCategory() {
+            const subject = document.getElementById('subject').value;
+            const subSelect = document.getElementById('subCategory');
+            subSelect.innerHTML = '';
+
+            if (subject === 'eng') {
+                subSelect.innerHTML = '<option value="eng">英語全般</option>';
+            } else if (subject === 'hist') {
+                subSelect.innerHTML = '<option value="hist">日本史全般</option>';
+            } else if (subject === 'jp') {
+                subSelect.innerHTML = `
+                    <option value="jp-gen">現代文</option>
+                    <option value="jp-kob">古文</option>
+                    <option value="jp-kan">漢文</option>
+                `;
+            }
+        }
+        // 初期実行
+        updateSubCategory();
+
+        function saveAndRender() {
+            localStorage.setItem('study_tasks_v2', JSON.stringify(tasks));
+            localStorage.setItem('study_routine_defs', JSON.stringify(routineDefs));
+            localStorage.setItem('study_routine_status', JSON.stringify(routineStatus));
+            render();
+        }
+
+        // --- タスク操作 ---
+        function addTask() {
+            const timeSlot = document.getElementById('timeSlot').value;
+            const subject = document.getElementById('subject').value;
+            const subCategory = document.getElementById('subCategory').value;
+            const textInput = document.getElementById('taskInput');
+            const text = textInput.value.trim();
+
+            if (text === '') return;
+
+            const newTask = {
+                id: Date.now(),
+                slot: timeSlot,
+                subject: subject,
+                subCategory: subCategory,
+                text: text,
+                completed: false
+            };
+
+            tasks.push(newTask);
+            textInput.value = '';
+            saveAndRender();
+        }
+
+        function toggleTask(id) {
+            tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+            saveAndRender();
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveAndRender();
+        }
+
+        // --- ルーティン操作 ---
+        function toggleRoutine(id) {
+            routineStatus[id] = !routineStatus[id];
+            saveAndRender();
+        }
+
+        function addRoutineDef() {
+            const input = document.getElementById('routineInput');
+            const text = input.value.trim();
+            if(!text) return;
+            routineDefs.push({ id: Date.now(), text: text });
+            input.value = '';
+            saveAndRender();
+        }
+
+        function deleteRoutineDef(id) {
+            routineDefs = routineDefs.filter(r => r.id !== id);
+            delete routineStatus[id];
+            saveAndRender();
+        }
+
+        function openRoutineModal() {
+            document.getElementById('routineEditCard').style.display = 'block';
+            renderRoutineDefs();
+        }
+
+        function closeRoutineModal() {
+            document.getElementById('routineEditCard').style.display = 'none';
+        }
+
+        // --- 描画処理 ---
+        function render() {
+            renderRoutines();
+            renderTasks();
+        }
+
+        function renderRoutines() {
+            const list = document.getElementById('routineList');
+            list.innerHTML = '';
+
+            if (routineDefs.length === 0) {
+                list.innerHTML = '<p class="empty-msg">ルーティンが登録されていません。「ルーティン編集」から追加してね</p>';
+                return;
+            }
+
+            routineDefs.forEach(r => {
+                const isChecked = !!routineStatus[r.id];
+                const li = document.createElement('li');
+                if (isChecked) li.classList.add('completed');
+
+                li.innerHTML = `
+                    <div class="task-left">
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="toggleRoutine(${r.id})">
+                        <span class="badge" style="background-color: var(--primary);">毎日</span>
+                        <span class="task-text">${escapeHtml(r.text)}</span>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function renderRoutineDefs() {
+            const list = document.getElementById('routineDefList');
+            list.innerHTML = '';
+            routineDefs.forEach(r => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${escapeHtml(r.text)}</span>
+                    <button class="delete-btn" onclick="deleteRoutineDef(${r.id})">削除</button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function renderTasks() {
+            const amList = document.getElementById('amList');
+            const pmList = document.getElementById('pmList');
+
+            amList.innerHTML = '';
+            pmList.innerHTML = '';
+
+            let amCount = 0;
+            let pmCount = 0;
+
+            tasks.forEach(t => {
+                const li = document.createElement('li');
+                if (t.completed) li.classList.add('completed');
+
+                // バッジの色とテキストの決定
+                let badgeClass = 'badge-eng';
+                let badgeText = '英語';
+                if (t.subject === 'hist') {
+                    badgeClass = 'badge-hist';
+                    badgeText = '日本史';
+                } else if (t.subject === 'jp') {
+                    badgeText = '国語';
+                    if (t.subCategory === 'jp-gen') { badgeClass = 'badge-jp-gen'; badgeText = '現代文'; }
+                    else if (t.subCategory === 'jp-kob') { badgeClass = 'badge-jp-kob'; badgeText = '古文'; }
+                    else if (t.subCategory === 'jp-kan') { badgeClass = 'badge-kan'; badgeText = '漢文'; }
+                    else { badgeClass = 'badge-jp'; }
+                }
+
+                li.innerHTML = `
+                    <div class="task-left">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTask(${t.id})">
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                        <span class="task-text">${escapeHtml(t.text)}</span>
+                    </div>
+                    <button class="delete-btn" onclick="deleteTask(${t.id})">削除</button>
+                `;
+
+                if (t.slot === 'am') {
+                    amList.appendChild(li);
+                    amCount++;
+                } else {
+                    pmList.appendChild(li);
+                    pmCount++;
+                }
+            });
+
+            if (amCount === 0) amList.innerHTML = '<p class="empty-msg">午前中のタスクはありません</p>';
+            if (pmCount === 0) pmList.innerHTML = '<p class="empty-msg">午後のタスクはありません</p>';
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        // 初回描画
+        render();
+    </script>
+</body>
+</html>
