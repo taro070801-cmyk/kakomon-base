@@ -226,8 +226,8 @@
     </main>
 
     <!-- ==================== モーダル: 大学追加・編集 ==================== -->
-    <div x-show="openUnivModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" style="display: none;">
-        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+    <div x-show="openUnivModal" class="fixed inset-0 bg-black/50 overflow-y-auto flex items-start justify-center p-4 z-50 pt-20" style="display: none;">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl mb-12">
             <h3 class="text-lg font-bold text-slate-900 mb-4">大学の管理</h3>
             <div class="space-y-3 mb-6 max-h-48 overflow-y-auto">
                 <template x-for="univ in universities" :key="univ.id">
@@ -249,8 +249,8 @@
     </div>
 
     <!-- ==================== モーダル: 学部追加 ==================== -->
-    <div x-show="openFacultyModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" style="display: none;">
-        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+    <div x-show="openFacultyModal" class="fixed inset-0 bg-black/50 overflow-y-auto flex items-start justify-center p-4 z-50 pt-20" style="display: none;">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl mb-12">
             <h3 class="text-lg font-bold text-slate-900 mb-4" x-text="currentUniv.name + ' の学部追加'"></h3>
             <div class="space-y-3 mb-6 max-h-48 overflow-y-auto">
                 <template x-for="faculty in currentUniv.faculties" :key="faculty.id">
@@ -272,8 +272,8 @@
     </div>
 
     <!-- ==================== モーダル: 年度・科目データの追加・編集 ==================== -->
-    <div x-show="openExamModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto" style="display: none;">
-        <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl my-8">
+    <div x-show="openExamModal" class="fixed inset-0 bg-black/50 overflow-y-auto flex items-start justify-center p-4 z-50 pt-10 pb-10" style="display: none;">
+        <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl my-auto">
             <h3 class="text-lg font-bold text-slate-900 mb-4" x-text="isEditingExam ? '過去問データを編集' : '新しい過去問データを追加'"></h3>
             
             <div class="space-y-4 mb-6">
