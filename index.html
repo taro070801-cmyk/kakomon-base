@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>受験勉強タスク＆過去問・AI分析管理アプリ</title>
+    <title>受験勉強タスク＆AI分析アプリ</title>
     <style>
         body {
             font-family: sans-serif;
@@ -19,9 +19,38 @@
         .date-display {
             text-align: center;
             font-size: 1.1rem;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: #666;
         }
+        /* ページ切り替えタブ */
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: #333;
+            transition: background 0.2s;
+        }
+        .tab-btn.active {
+            background: #4a90e2;
+            color: white;
+        }
+        .page-view {
+            display: none;
+        }
+        .page-view.active {
+            display: block;
+        }
+
         .section {
             background: #fff;
             padding: 15px;
@@ -105,9 +134,7 @@
             font-size: 0.85rem;
             cursor: pointer;
         }
-        .actions button:hover, .small-btn:hover {
-            background: #eee;
-        }
+        .actions button:hover, .small-btn:hover { background: #eee; }
 
         .progress-container {
             background: #e0e0e0;
@@ -210,7 +237,7 @@
         .chart-bar { background-color: #ff9800; height: 100%; width: 0%; transition: width 0.4s ease; }
         .chart-value { position: absolute; right: 8px; top: 0; line-height: 22px; font-size: 0.8rem; font-weight: bold; color: #333; }
 
-        /* AI分析パネル特有のスタイル */
+        /* AI分析ページ特有のスタイル */
         .ai-report-box {
             background: linear-gradient(135deg, #f3e5f5, #e8eaf6);
             border: 1px solid #d1c4e9;
@@ -221,136 +248,150 @@
         .ai-report-title {
             font-weight: bold;
             color: #512da8;
-            font-size: 1.05rem;
-            margin-bottom: 8px;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
         .ai-section {
             background: #fff;
-            padding: 10px;
+            padding: 12px;
             border-radius: 6px;
-            margin-top: 8px;
+            margin-top: 10px;
             border-left: 4px solid #7e57c2;
-            font-size: 0.9rem;
-            line-height: 1.5;
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
         .faculty-summary-card {
             background: #fafafa;
             border: 1px solid #e0e0e0;
             border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
 
-    <h1>受験勉強タスク＆過去問・AI分析管理</h1>
+    <h1>受験勉強タスク＆AI分析アプリ</h1>
     <div class="date-display" id="currentDateDisplay"></div>
 
-    <!-- 今日の完遂率セクション -->
-    <div class="section">
-        <h2>今日の完遂率</h2>
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar"></div>
-            <div class="progress-text" id="progressText">0% (0 / 0)</div>
+    <!-- ページ切り替えタブ -->
+    <div class="tab-nav">
+        <button class="tab-btn active" id="btnTabHome" onclick="switchTab('home')">📝 記録・タスク管理</button>
+        <button class="tab-btn" id="btnTabAnalysis" onclick="switchTab('analysis')">🤖 AI分析レポート</button>
+    </div>
+
+    <!-- ================= 1. 記録・タスク管理ページ ================= -->
+    <div class="page-view active" id="pageHome">
+        <!-- 今日の完遂率 -->
+        <div class="section">
+            <h2>今日の完遂率</h2>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+                <div class="progress-text" id="progressText">0% (0 / 0)</div>
+            </div>
+        </div>
+
+        <!-- タスク追加 -->
+        <div class="section">
+            <h2>今日のタスクを追加</h2>
+            <div class="input-group">
+                <select id="timeSlot">
+                    <option value="午前">午前</option>
+                    <option value="午後">午後</option>
+                </select>
+                <select id="subject">
+                    <option value="英語">英語</option>
+                    <option value="国語">国語</option>
+                    <option value="日本史">日本史</option>
+                </select>
+                <input type="text" id="taskName" placeholder="タスク名（例：現代文、英単語など）">
+                <button onclick="addTask()">追加</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>午前</h2>
+            <ul id="morningList"></ul>
+        </div>
+
+        <div class="section">
+            <h2>午後</h2>
+            <ul id="afternoonList"></ul>
+        </div>
+
+        <!-- 1ヶ月カレンダー -->
+        <div class="section">
+            <h2>1ヶ月カレンダー（クリックして詳細確認）</h2>
+            <div class="calendar-header">
+                <button onclick="changeMonth(-1)">◀ 前月</button>
+                <h3 id="calendarMonthTitle" style="margin:0; font-size:1.1rem;"></h3>
+                <button onclick="changeMonth(1)">次月 ▶</button>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            
+            <div class="detail-box" id="dayDetailBox">
+                <h3 id="detailTitle" style="margin-top:0; font-size:1rem;">日付の詳細</h3>
+                <div id="detailContent"></div>
+            </div>
+        </div>
+
+        <!-- 過去問演習・反省ノート -->
+        <div class="section">
+            <h2>過去問演習・得点率・反省ノート</h2>
+            <p style="font-size:0.85rem; color:#666; margin-top:0;">志望学部ごとに過去問の得点率、大問別正答率、反省点を記録できます。</p>
+            
+            <div class="input-group" style="margin-bottom: 10px;">
+                <select id="pqUni" style="flex:2;">
+                    <option value="早大・社会科学部">早大・社会科学部</option>
+                    <option value="早大・教育学部">早大・教育学部</option>
+                    <option value="早大・文学部">早大・文学部</option>
+                    <option value="早大・文化構想学部">早大・文化構想学部</option>
+                    <option value="早大・商学部">早大・商学部</option>
+                    <option value="その他">その他</option>
+                </select>
+                <select id="pqSubject" style="flex:1;">
+                    <option value="英語">英語</option>
+                    <option value="国語">国語</option>
+                    <option value="日本史">日本史</option>
+                </select>
+                <input type="text" id="pqYearLabel" placeholder="年度 (例:2024)" style="flex:1;">
+                <input type="date" id="pqDate" style="flex:1.5;">
+                <button onclick="addPastExam()">追加</button>
+            </div>
+
+            <div id="pastExamListContainer"></div>
         </div>
     </div>
 
-    <!-- タスク追加セクション -->
-    <div class="section">
-        <h2>今日のタスクを追加</h2>
-        <div class="input-group">
-            <select id="timeSlot">
-                <option value="午前">午前</option>
-                <option value="午後">午後</option>
-            </select>
-            <select id="subject">
-                <option value="英語">英語</option>
-                <option value="国語">国語</option>
-                <option value="日本史">日本史</option>
-            </select>
-            <input type="text" id="taskName" placeholder="タスク名（例：現代文、英単語など）">
-            <button onclick="addTask()">追加</button>
-        </div>
-    </div>
 
-    <div class="section">
-        <h2>午前</h2>
-        <ul id="morningList"></ul>
-    </div>
+    <!-- ================= 2. AI分析レポートページ（別ページ） ================= -->
+    <div class="page-view" id="pageAnalysis">
+        <div class="section">
+            <h2>志望学部別 傾向まとめ ＆ AIパーソナル分析レポート</h2>
+            <p style="font-size:0.85rem; color:#666; margin-top:0;">記録された過去問の得点率や反省ノートのコメントをAIエンジンが常時解析し、現在の成長度・得意苦手を判定します。</p>
+            
+            <div style="margin-bottom: 15px;">
+                <button onclick="runAiAnalysis()" style="background-color: #7e57c2; width:100%; padding: 12px; font-weight: bold; border-radius: 4px; font-size: 1rem;">🔄 分析レポートを更新・再読み込み</button>
+            </div>
 
-    <div class="section">
-        <h2>午後</h2>
-        <ul id="afternoonList"></ul>
-    </div>
-
-    <!-- 1ヶ月カレンダーセクション -->
-    <div class="section">
-        <h2>1ヶ月カレンダー（クリックして詳細確認）</h2>
-        <div class="calendar-header">
-            <button onclick="changeMonth(-1)">◀ 前月</button>
-            <h3 id="calendarMonthTitle" style="margin:0; font-size:1.1rem;"></h3>
-            <button onclick="changeMonth(1)">次月 ▶</button>
-        </div>
-        <div class="calendar-grid" id="calendarGrid"></div>
-        
-        <div class="detail-box" id="dayDetailBox">
-            <h3 id="detailTitle" style="margin-top:0; font-size:1rem;">日付の詳細</h3>
-            <div id="detailContent"></div>
-        </div>
-    </div>
-
-    <!-- 過去問演習・反省ノートセクション -->
-    <div class="section">
-        <h2>過去問演習・得点率・反省ノート</h2>
-        <p style="font-size:0.85rem; color:#666; margin-top:0;">志望学部ごとに過去問の得点率、大問別正答率、反省点を記録できます。</p>
-        
-        <div class="input-group" style="margin-bottom: 10px;">
-            <select id="pqUni" style="flex:2;">
-                <option value="早大・社会科学部">早大・社会科学部</option>
-                <option value="早大・教育学部">早大・教育学部</option>
-                <option value="早大・文学部">早大・文学部</option>
-                <option value="早大・文化構想学部">早大・文化構想学部</option>
-                <option value="早大・商学部">早大・商学部</option>
-                <option value="その他">その他</option>
-            </select>
-            <select id="pqSubject" style="flex:1;">
-                <option value="英語">英語</option>
-                <option value="国語">国語</option>
-                <option value="日本史">日本史</option>
-            </select>
-            <input type="text" id="pqYearLabel" placeholder="年度 (例:2024)" style="flex:1;">
-            <input type="date" id="pqDate" style="flex:1.5;">
-            <button onclick="addPastExam()">追加</button>
+            <div id="facultySummaryContainer"></div>
+            <div id="aiReportContainer"></div>
         </div>
 
-        <div id="pastExamListContainer"></div>
-    </div>
-
-    <!-- 学部別傾向＆AIパーソナル診断セクション -->
-    <div class="section">
-        <h2>志望学部別 傾向まとめ ＆ AI分析レポート</h2>
-        <p style="font-size:0.85rem; color:#666; margin-top:0;">登録した得点率や反省ノートをAIエンジンが自動診断し、あなたの得意・苦手、成長度を分析して対策を補正します。</p>
-        
-        <button onclick="runAiAnalysis()" style="background-color: #7e57c2; width:100%; padding: 10px; font-weight: bold; border-radius: 4px; font-size: 1rem; margin-bottom: 10px;">✨ AI診断・成長度分析を実行する</button>
-
-        <div id="facultySummaryContainer"></div>
-        <div id="aiReportContainer"></div>
-    </div>
-
-    <!-- 進捗棒グラフセクション -->
-    <div class="section">
-        <h2>過去問の進捗（科目別グラフ）</h2>
-        <div class="filter-tabs" id="chartFilterTabs">
-            <button class="filter-tab active" onclick="setChartFilter('すべて')">すべて</button>
-            <button class="filter-tab" onclick="setChartFilter('英語')">英語</button>
-            <button class="filter-tab" onclick="setChartFilter('国語')">国語</button>
-            <button class="filter-tab" onclick="setChartFilter('日本史')">日本史</button>
+        <!-- 科目別・学部別進捗グラフ -->
+        <div class="section">
+            <h2>過去問の進捗（科目別グラフ）</h2>
+            <div class="filter-tabs" id="chartFilterTabs">
+                <button class="filter-tab active" onclick="setChartFilter('すべて')">すべて</button>
+                <button class="filter-tab" onclick="setChartFilter('英語')">英語</button>
+                <button class="filter-tab" onclick="setChartFilter('国語')">国語</button>
+                <button class="filter-tab" onclick="setChartFilter('日本史')">日本史</button>
+            </div>
+            <div class="chart-container" id="chartContainer"></div>
         </div>
-        <div class="chart-container" id="chartContainer"></div>
     </div>
 
     <script>
@@ -363,8 +404,26 @@
         const dateObj = new Date();
         document.getElementById('currentDateDisplay').innerText = dateObj.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 
+        // タブ切り替え関数
+        function switchTab(tabName) {
+            document.getElementById('pageHome').classList.remove('active');
+            document.getElementById('pageAnalysis').classList.remove('active');
+            document.getElementById('btnTabHome').classList.remove('active');
+            document.getElementById('btnTabAnalysis').classList.remove('active');
+
+            if (tabName === 'home') {
+                document.getElementById('pageHome').classList.add('active');
+                document.getElementById('btnTabHome').classList.add('active');
+            } else {
+                document.getElementById('pageAnalysis').classList.add('active');
+                document.getElementById('btnTabAnalysis').classList.add('active');
+                runAiAnalysis(); // 分析ページを開いたときに自動実行
+                renderChart();
+            }
+        }
+
         // タスク履歴データ
-        let historyData = JSON.parse(localStorage.getItem('study_history_v7')) || {};
+        let historyData = JSON.parse(localStorage.getItem('study_history_v8')) || {};
         if (!historyData[todayKey]) {
             const keys = Object.keys(historyData).sort();
             if (keys.length > 0) {
@@ -379,7 +438,7 @@
             saveHistory();
         }
         function saveHistory() {
-            localStorage.setItem('study_history_v7', JSON.stringify(historyData));
+            localStorage.setItem('study_history_v8', JSON.stringify(historyData));
         }
         let currentTasks = historyData[todayKey];
 
@@ -550,7 +609,7 @@
                 exams.forEach(e => {
                     examHtml += `<div style="background:#fff; padding:6px; margin-bottom:4px; border:1px solid #ddd; border-radius:4px;">
                         <b>${e.uni} (${e.subject})</b> [${e.yearLabel || ''}]<br>
-                        総合得点率: <b>${e.overallScore || '未入力'}</b><br>
+                        得点率: <b>${e.overallScore || '未入力'}</b><br>
                         大問別: ${e.daimonScores || '未入力'}<br>
                         反省: <span style="color:#c62828;">${e.reflection || 'なし'}</span>
                     </div>`;
@@ -561,18 +620,17 @@
         }
 
         // 過去問管理データ
-        let pastExams = JSON.parse(localStorage.getItem('study_past_exams_v4')) || [
+        let pastExams = JSON.parse(localStorage.getItem('study_past_exams_v5')) || [
             { id: 1, uni: '早大・社会科学部', subject: '英語', yearLabel: '2024', date: '', overallScore: '72%', daimonScores: '大問1:80%, 大問2:60%, 大問3:75%', reflection: '時間配分がうまくいかなかった。長文の論理展開に注意。' },
             { id: 2, uni: '早大・教育学部', subject: '国語', yearLabel: '2023', date: '', overallScore: '65%', daimonScores: '現代文:70%, 古文:60%', reflection: '古文単語と文法の基礎抜けを総復習する。' },
             { id: 3, uni: '早大・商学部', subject: '日本史', yearLabel: '2024', date: '', overallScore: '68%', daimonScores: '大問1:70%, 大問2:65%', reflection: '文化史の記述用語が曖昧だった。' }
         ];
 
         function savePastExams() {
-            localStorage.setItem('study_past_exams_v4', JSON.stringify(pastExams));
+            localStorage.setItem('study_past_exams_v5', JSON.stringify(pastExams));
             renderPastExams();
             renderChart();
             renderCalendar();
-            runAiAnalysis(); // 自動でAI分析も更新
         }
 
         function renderPastExams() {
@@ -680,19 +738,18 @@
             const aiContainer = document.getElementById('aiReportContainer');
             
             if (pastExams.length === 0) {
-                summaryContainer.innerHTML = '<p style="font-size:0.9rem; color:#666;">過去問データがありません。</p>';
+                summaryContainer.innerHTML = '<p style="font-size:0.9rem; color:#666;">過去問データがありません。「記録・タスク管理」ページから過去問を追加してください。</p>';
                 aiContainer.innerHTML = '';
                 return;
             }
 
-            // 1. 学部ごとにデータをグループ化
             let facultyMap = {};
             pastExams.forEach(e => {
                 if (!facultyMap[e.uni]) facultyMap[e.uni] = [];
                 facultyMap[e.uni].push(e);
             });
 
-            let facultyHtml = '<h3>📁 志望学部別 演習状況</h3>';
+            let facultyHtml = '<h3 style="margin-top:0;">📁 志望学部別 演習状況まとめ</h3>';
             let totalScoreSum = 0;
             let scoreCount = 0;
             let reflectionsText = '';
@@ -711,37 +768,35 @@
                         scoreCount++;
                     }
                     if (ex.reflection) reflectionsText += ` ${ex.reflection}`;
-                    examDetails += `<div style="font-size:0.85rem; margin-top:2px; color:#444;">・[${ex.subject}] ${ex.yearLabel || '年度不明'}: <b>得点率 ${ex.overallScore || '未入力'}</b> (${ex.reflection ? '反省あり' : '反省なし'})</div>`;
+                    examDetails += `<div style="font-size:0.85rem; margin-top:2px; color:#444;">・[${ex.subject}] ${ex.yearLabel || '年度不明'}: <b>得点率 ${ex.overallScore || '未入力'}</b> （${ex.daimonScores ? '大問別記録あり' : '大問別未記入'}）</div>`;
                 });
 
                 let avgUniScore = uniScoreCount > 0 ? Math.round(uniScoreSum / uniScoreCount) : '算出中';
                 facultyHtml += `
                     <div class="faculty-summary-card">
                         <b>📍 ${uni}</b> （実施数: ${exams.length}回 / 平均得点率: ${avgUniScore}${typeof avgUniScore === 'number' ? '%' : ''}）
-                        ${examDetails}
+                        <div style="margin-top: 4px;">${examDetails}</div>
                     </div>
                 `;
             }
             summaryContainer.innerHTML = facultyHtml;
 
-            // 2. AI判定・分析ロジック
             let overallAvg = scoreCount > 0 ? Math.round(totalScoreSum / scoreCount) : 0;
             
-            let growthJudgement = "データ蓄積中ですが、継続的な過去問演習により基礎から実践力への移行期にあります。";
+            let growthJudgement = "データ蓄積中です。過去問の演習と反省をさらに記録するとAIの診断精度が上がります。";
             if (overallAvg >= 75) {
-                growthJudgement = "🌟【順調・合格圏内到達レベル】全体平均得点率が75%を超えており、過去問の得点力・処理能力が非常に高く安定しています。この調子で弱点をゼロに潰していきましょう。";
+                growthJudgement = "🌟【順調・合格圏内到達レベル】全体平均得点率が75%を超えており、安定した得点力を発揮できています。難問の失点原因をさらに細かく潰しましょう。";
             } else if (overallAvg >= 60) {
-                growthJudgement = "📈【成長・得点力アップ期】平均得点率が60%台に乗っており、合格最低点ラインを視野に入れた戦いができています。大問ごとの失点原因を潰すことで一気に安定します。";
+                growthJudgement = "📈【成長・得点力アップ期】平均得点率が60%台に乗り、合格最低点ラインをクリアできる実力がついてきています。大問ごとの失点傾向を分析して弱点を補強しましょう。";
             } else if (overallAvg > 0) {
-                growthJudgement = "🌱【基礎固め・伸び代大】現在はインプットとアウトプットの接続期間です。反省ノートにある課題を一つずつクリアすれば急激な伸びが期待できます。";
+                growthJudgement = "🌱【基礎固め・伸び代大】インプットとアウトプットの接続期です。反省ノートの課題を一つずつクリアしていけば、ここから一気に得点率が跳ね上がります。";
             }
 
-            // 反省キーワード抽出によるAI補正アドバイス
-            let adviceAddition = "反省コメントから、時間配分や基礎知識（英単語・古文・漢字など）の定着に意識が向いています。引き続き、復習の回転数を上げてください。";
+            let adviceAddition = "反省コメントから、時間配分や基礎知識の定着に意識が向いています。引き続き復習の回転数を上げてください。";
             if (reflectionsText.includes("時間") || reflectionsText.includes("配分") || reflectionsText.includes("ペース")) {
-                adviceAddition = "⏰ **AI分析補正**: 反省点に「時間配分」に関する言及が多く見られます。解答の順番や、難しい大問を飛ばす勇気（スキップ戦術）を意識した時間シミュレーションを取り入れてみてください。";
-            } else if (reflectionsText.includes("単語") || reflectionsText.includes("基礎") || reflectionsText.includes("文法") || reflectionsText.includes("漢字")) {
-                adviceAddition = "📚 **AI分析補正**: 反省点に「基礎用語・単語・文法」の抜けが指摘されています。新しい過去問を解くよりも、直近で間違えた問題の解説と基礎インプットの復習を優先することで得点率が跳ね上がります。";
+                adviceAddition = "⏰ **AI分析補正**: 反省点に「時間配分」や「ペース」に関する言及が多く見られます。解答の順番や、難しい問題を思い切って飛ばすスキップ戦術を意識した時間シミュレーションを取り入れてみてください。";
+            } else if (reflectionsText.includes("単語") || reflectionsText.includes("基礎") || reflectionsText.includes("文法") || reflectionsText.includes("漢字") || reflectionsText.includes("古文")) {
+                adviceAddition = "📚 **AI分析補正**: 反省点に「基礎用語・単語・文法」の抜けが指摘されています。新しい過去問を無理に進めるより、直近で間違えた問題の解説と基礎インプットの復習を優先することで得点率が安定します。";
             }
 
             let aiReportHtml = `
@@ -753,10 +808,10 @@
                     </div>
                     <div class="ai-section">
                         <b>2. 学部別傾向と現在の位置づけ</b><br>
-                        早稲田の各学部（社会科学部、教育学部、文学部など）は、それぞれ「記述・思考力」「スピード勝負」「独自形式の読解」が求められます。学部ごとの得点率のバラつきを抑えるため、共通して失点している科目・大問がないかを確認しましょう。
+                        早稲田の各学部（社会科学部、教育学部、文学部、文化構想学部、商学部など）はそれぞれ出題傾向やスピード感が異なります。学部ごとの得点率の偏りがないか確認し、弱点科目を重点的に対策しましょう。
                     </div>
                     <div class="ai-section">
-                        <b>3. 💡 今後の学習・分析補正アドバイス</b><br>
+                        <b>3. 💡 AIによる分析補正アドバイス</b><br>
                         ${adviceAddition}
                     </div>
                 </div>
@@ -810,7 +865,6 @@
         renderTasks();
         renderPastExams();
         renderChart();
-        runAiAnalysis();
     </script>
 </body>
 </html>
