@@ -2,888 +2,487 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>受験勉強タスク＆AI分析アプリ</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            max-width: 780px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #f4f6f9;
-            color: #333;
-        }
-        h1, h2, h3 {
-            text-align: center;
-            color: #333;
-        }
-        .date-display {
-            text-align: center;
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            color: #666;
-        }
-        /* ページ切り替えタブ（4分割） */
-        .tab-nav {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .tab-btn {
-            flex: 1;
-            min-width: 110px;
-            padding: 10px 6px;
-            background: #e0e0e0;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            cursor: pointer;
-            color: #333;
-            transition: background 0.2s;
-            text-align: center;
-        }
-        .tab-btn.active {
-            background: #4a90e2;
-            color: white;
-        }
-        .page-view {
-            display: none;
-        }
-        .page-view.active {
-            display: block;
-        }
-
-        .section {
-            background: #fff;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .section h2 {
-            margin-top: 0;
-            font-size: 1.1rem;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 5px;
-            text-align: left;
-        }
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        input, select, textarea, button {
-            padding: 8px;
-            font-size: 1rem;
-            box-sizing: border-box;
-        }
-        input[type="text"], input[type="date"], select {
-            flex: 1;
-            min-width: 110px;
-        }
-        button {
-            cursor: pointer;
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            border-radius: 4px;
-        }
-        button:hover {
-            background-color: #357abd;
-        }
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-        li {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            background: #fff;
-            border: 1px solid #eee;
-        }
-        .task-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-        }
-        .completed span {
-            text-decoration: line-through;
-            color: #888;
-        }
-        .tag {
-            font-size: 0.8rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        .tag-english { background-color: #ffccf2; color: #660033; }
-        .tag-japanese { background-color: #ffe5cc; color: #663300; }
-        .tag-history { background-color: #ccffcc; color: #003300; }
-
-        .actions button, .small-btn {
-            background: none;
-            border: 1px solid #ccc;
-            color: #333;
-            padding: 3px 8px;
-            border-radius: 4px;
-            margin-left: 2px;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-        .actions button:hover, .small-btn:hover { background: #eee; }
-
-        .progress-container {
-            background: #e0e0e0;
-            border-radius: 4px;
-            height: 20px;
-            width: 100%;
-            margin-top: 10px;
-            overflow: hidden;
-            position: relative;
-        }
-        .progress-bar {
-            background-color: #4caf50;
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        .progress-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            top: 0;
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: #333;
-            line-height: 20px;
-        }
-
-        /* カレンダー */
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-        }
-        .calendar-weekday {
-            text-align: center;
-            font-weight: bold;
-            font-size: 0.85rem;
-            color: #666;
-            padding-bottom: 4px;
-        }
-        .calendar-day {
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            min-height: 65px;
-            padding: 4px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .calendar-day:hover { background: #eaeaea; }
-        .calendar-day.empty { background: transparent; border: none; cursor: default; }
-        .calendar-day.today { border-color: #4a90e2; background: #eef6fc; font-weight: bold; }
-        .day-rate { font-size: 0.8rem; font-weight: bold; color: #2e7d32; text-align: right; }
-        .has-exam {
-            font-size: 0.65rem; background: #e1f5fe; color: #01579b;
-            padding: 1px 3px; border-radius: 3px; margin-top: 2px;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
-        .detail-box {
-            background: #fff8e1; border: 1px solid #ffe082;
-            padding: 12px; border-radius: 6px; margin-top: 15px; display: none;
-        }
-
-        /* テーブル */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background-color: #f1f3f5; }
-        .table-input { width: 95%; padding: 4px; box-sizing: border-box; }
-        .exam-detail-panel {
-            background: #fdfdfd; border: 1px dashed #ccc; padding: 12px;
-            margin-top: 6px; border-radius: 6px; text-align: left;
-        }
-        .exam-detail-panel label {
-            font-size: 0.85rem; font-weight: bold; color: #555; display: block; margin-top: 6px;
-        }
-        .exam-detail-panel textarea, .exam-detail-panel input {
-            width: 100%; margin-top: 2px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem;
-        }
-
-        /* グラフ */
-        .filter-tabs { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
-        .filter-tab {
-            padding: 5px 12px; background: #eee; border: none;
-            border-radius: 4px; cursor: pointer; font-size: 0.9rem; color: #333;
-        }
-        .filter-tab.active { background: #4a90e2; color: white; font-weight: bold; }
-        .chart-container { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-        .chart-row { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
-        .chart-label { width: 160px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .chart-bar-wrapper { flex: 1; background: #eee; border-radius: 4px; height: 22px; position: relative; overflow: hidden; }
-        .chart-bar { background-color: #ff9800; height: 100%; width: 0%; transition: width 0.4s ease; }
-        .chart-value { position: absolute; right: 8px; top: 0; line-height: 22px; font-size: 0.8rem; font-weight: bold; color: #333; }
-
-        /* AI分析ページ特有のスタイル */
-        .ai-report-box {
-            background: linear-gradient(135deg, #f3e5f5, #e8eaf6);
-            border: 1px solid #d1c4e9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-        }
-        .ai-report-title {
-            font-weight: bold;
-            color: #512da8;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .ai-section {
-            background: #fff;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 10px;
-            border-left: 4px solid #7e57c2;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-        .faculty-summary-card {
-            background: #fafafa;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 10px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>早大過去問分析・演習管理システム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 min-h-screen" x-data="appData()">
 
-    <h1>受験勉強タスク＆AI分析アプリ</h1>
-    <div class="date-display" id="currentDateDisplay"></div>
+    <!-- ヘッダー -->
+    <header class="bg-indigo-900 text-white shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-wider cursor-pointer" @click="currentView = 'home'; selectedFacultyId = null;">
+                早大過去問アナライザー
+            </h1>
+            <div class="flex gap-2">
+                <button @click="openFacultyModal = true" class="bg-indigo-700 hover:bg-indigo-600 px-3 py-1.5 rounded text-sm font-medium transition">
+                    + 学部追加・編集
+                </button>
+            </div>
+        </div>
+    </header>
 
-    <!-- ページ切り替えタブ（4分割） -->
-    <div class="tab-nav">
-        <button class="tab-btn active" id="btnTabTask" onclick="switchTab('task')">🏠 タスク管理</button>
-        <button class="tab-btn" id="btnTabCalendar" onclick="switchTab('calendar')">📅 カレンダー</button>
-        <button class="tab-btn" id="btnTabExam" onclick="switchTab('exam')">📚 過去問・反省</button>
-        <button class="tab-btn" id="btnTabAnalysis" onclick="switchTab('analysis')">🤖 AI分析</button>
+    <main class="max-w-6xl mx-auto px-4 py-8">
+
+        <!-- ==================== VIEW 1: ホーム（学部一覧） ==================== -->
+        <template x-if="currentView === 'home'">
+            <div>
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-900">学部別演習ダッシュボード</h2>
+                    <p class="text-slate-600 text-sm mt-1">志望学部の演習状況と蓄積データを確認できます。学部名をクリックして詳細へ進んでください。</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <template x-for="faculty in faculties" :key="faculty.id">
+                        <div @click="selectFaculty(faculty.id)" class="bg-white rounded-xl shadow-sm hover:shadow-md transition border border-slate-200 p-6 cursor-pointer flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="text-lg font-bold text-slate-900" x-text="faculty.name"></h3>
+                                    <span class="bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-full" x-text="faculty.exams.length + '年分解いてる'"></span>
+                                </div>
+                                <p class="text-xs text-slate-500 mb-4" x-text="faculty.description || '早稲田大学 対策学部'"></p>
+                            </div>
+                            <div class="border-t border-slate-100 pt-4 flex justify-between items-center text-sm">
+                                <span class="text-slate-500">平均得点率:</span>
+                                <span class="font-bold text-indigo-600" x-text="calcFacultyAverage(faculty) + '%'"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- ==================== VIEW 2: 学部詳細（AI分析 ＆ 年度一覧） ==================== -->
+        <template x-if="currentView === 'faculty-detail'">
+          <div>
+              <!-- パンくず・戻る -->
+              <div class="mb-6 flex justify-between items-center">
+                  <button @click="currentView = 'home'; selectedFacultyId = null;" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center gap-1">
+                      &larr; 学部一覧に戻る
+                  </button>
+                  <button @click="openExamModalForAdd()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">
+                      + 年度・科目を追加する
+                  </button>
+              </div>
+
+              <!-- 学部タイトル -->
+              <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
+                  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div>
+                          <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded">Target Faculty</span>
+                          <h2 class="text-3xl font-extrabold text-slate-900 mt-1" x-text="currentFaculty.name"></h2>
+                      </div>
+                      <div class="flex gap-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                          <div>
+                              <div class="text-xs text-slate-500">解いた年度数</div>
+                              <div class="text-xl font-bold text-slate-900" x-text="currentFaculty.exams.length + ' 年分'"></div>
+                          </div>
+                          <div class="border-l border-slate-200 pl-4">
+                              <div class="text-xs text-slate-500">累計平均得点率</div>
+                              <div class="text-xl font-bold text-indigo-600" x-text="calcFacultyAverage(currentFaculty) + '%'"></div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- 冒頭：大問別 得意・苦手可視化マップ -->
+              <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
+                  <h3 class="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
+                      <span>📊 大問別 得意・苦手マップ</span>
+                  </h3>
+                  <p class="text-xs text-slate-500 mb-4">蓄積されたデータから自動算出した、科目・大問ごとの得意・苦手傾向です。</p>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <template x-for="(subjectData, subjectName) in getSubjectDaimonStats(currentFaculty)" :key="subjectName">
+                          <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                              <h4 class="font-bold text-slate-800 text-sm mb-3 border-b border-slate-200 pb-1" x-text="subjectName"></h4>
+                              <div class="space-y-2">
+                                  <template x-for="(stat, daimonIndex) in subjectData" :key="daimonIndex">
+                                      <div class="flex justify-between items-center text-xs">
+                                          <span class="text-slate-600" x-text="'大問 ' + (daimonIndex + 1)"></span>
+                                          <div class="flex items-center gap-2">
+                                              <span class="font-semibold text-slate-700" x-text="stat.avg + '%' "></span>
+                                              <span class="px-2 py-0.5 rounded text-[10px] font-bold"
+                                                  :class="{
+                                                      'bg-emerald-100 text-emerald-800': stat.avg >= 80,
+                                                      'bg-amber-100 text-amber-800': stat.avg >= 60 && stat.avg < 80,
+                                                      'bg-rose-100 text-rose-800': stat.avg < 60
+                                                  }"
+                                                  x-text="stat.avg >= 80 ? '得意' : (stat.avg >= 60 ? '標準' : '苦手')">
+                                              </span>
+                                          </div>
+                                      </div>
+                                  </template>
+                              </div>
+                          </div>
+                      </template>
+                  </div>
+              </div>
+
+              <!-- AIによる客観的分析 -->
+              <div class="bg-gradient-to-r from-indigo-900 to-slate-900 text-white rounded-xl shadow-md p-6 mb-8">
+                  <h3 class="text-base font-bold mb-2 flex items-center gap-2 text-indigo-200">
+                      <span>🤖 総合AI客観分析</span>
+                  </h3>
+                  <p class="text-sm leading-relaxed text-slate-200" x-text="generateAIAnalysis(currentFaculty)"></p>
+              </div>
+
+              <!-- 年度一覧 -->
+              <div class="space-y-4">
+                  <h3 class="text-xl font-bold text-slate-900">演習年度一覧</h3>
+                  <template x-for="exam in currentFaculty.exams" :key="exam.year">
+                      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                          <!-- 年度ヘッダー（クリックで開閉） -->
+                          <div @click="toggleExpand(exam.year)" class="p-5 bg-slate-50 hover:bg-slate-100 transition cursor-pointer flex justify-between items-center">
+                              <div class="flex items-center gap-4">
+                                  <span class="text-lg font-bold text-indigo-900" x-text="exam.year + '年度'"></span>
+                                  <span class="text-xs bg-slate-200 text-slate-700 px-2.5 py-1 rounded font-medium" x-text="'合計得点率: ' + exam.totalScorePct + '%'"></span>
+                              </div>
+                              <div class="flex items-center gap-3">
+                                  <button @click.stop="openExamModalForEdit(exam)" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded transition">
+                                      編集
+                                  </button>
+                                  <span class="text-slate-400 text-sm font-bold" x-text="expandedYear === exam.year ? '▲ 閉じる' : '▼ 英国日本史の詳細を見る'"></span>
+                              </div>
+                          </div>
+
+                          <!-- 英国日本史の詳細（クリックで展開） -->
+                          <template x-if="expandedYear === exam.year">
+                              <div class="p-6 border-t border-slate-200 space-y-6">
+                                  <template x-for="(subjectData, subjectName) in exam.subjects" :key="subjectName">
+                                      <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                          <div class="flex justify-between items-center mb-3">
+                                              <h4 class="font-bold text-slate-900 text-base" x-text="subjectName"></h4>
+                                              <span class="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-1 rounded" x-text="'科目得点率: ' + subjectData.totalScorePct + '%'"></span>
+                                          </div>
+
+                                          <!-- 大問構成と得点率 -->
+                                          <div class="mb-3">
+                                              <div class="text-xs text-slate-500 mb-1" x-text="'大問構成: ' + subjectData.daimonCount + '問'"></div>
+                                              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                                  <template x-for="(score, dIndex) in subjectData.scores" :key="dIndex">
+                                                      <div class="bg-white p-2 rounded border border-slate-200 text-center">
+                                                          <div class="text-[10px] text-slate-400" x-text="'大問 ' + (dIndex + 1)"></div>
+                                                          <div class="font-bold text-slate-800 text-sm" x-text="score + '%'"></div>
+                                                      </div>
+                                                  </template>
+                                              </div>
+                                          </div>
+
+                                          <!-- 反省 -->
+                                          <div class="bg-white p-3 rounded border border-slate-200">
+                                              <span class="text-xs font-bold text-slate-500 block mb-1">反省・振り返り:</span>
+                                              <p class="text-xs text-slate-700 whitespace-pre-line" x-text="subjectData.reflection || '反省の記録なし'"></p>
+                                          </div>
+                                      </div>
+                                  </template>
+                              </div>
+                          </template>
+                      </div>
+                  </template>
+              </div>
+          </div>
+        </template>
+
+    </main>
+
+    <!-- ==================== モーダル: 学部追加・編集 ==================== -->
+    <div x-show="openFacultyModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" style="display: none;">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+            <h3 class="text-lg font-bold text-slate-900 mb-4">学部グループの管理</h3>
+            <div class="space-y-3 mb-6">
+                <template x-for="faculty in faculties" :key="faculty.id">
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded border border-slate-200">
+                        <span class="font-medium text-sm text-slate-800" x-text="faculty.name"></span>
+                        <button @click="deleteFaculty(faculty.id)" class="text-rose-600 hover:text-rose-800 text-xs font-bold px-2 py-1 bg-rose-50 rounded">削除</button>
+                    </div>
+                </template>
+            </div>
+            <div class="border-t border-slate-200 pt-4">
+                <label class="block text-xs font-bold text-slate-700 mb-1">新しい学部名</label>
+                <input type="text" x-model="newFacultyName" placeholder="例: 商学部" class="w-full border border-slate-300 rounded px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <div class="flex justify-end gap-2">
+                    <button @click="openFacultyModal = false" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-sm font-medium">閉じる</button>
+                    <button @click="addFaculty()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium">追加する</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- ================= 1. タスク管理ページ ================= -->
-    <div class="page-view active" id="pageTask">
-        <!-- 今日の完遂率 -->
-        <div class="section">
-            <h2>今日の完遂率</h2>
-            <div class="progress-container">
-                <div class="progress-bar" id="progressBar"></div>
-                <div class="progress-text" id="progressText">0% (0 / 0)</div>
-            </div>
-        </div>
-
-        <!-- タスク追加 -->
-        <div class="section">
-            <h2>今日のタスクを追加</h2>
-            <div class="input-group">
-                <select id="timeSlot">
-                    <option value="午前">午前</option>
-                    <option value="午後">午後</option>
-                </select>
-                <select id="subject">
-                    <option value="英語">英語</option>
-                    <option value="国語">国語</option>
-                    <option value="日本史">日本史</option>
-                </select>
-                <input type="text" id="taskName" placeholder="タスク名（例：現代文、英単語など）">
-                <button onclick="addTask()">追加</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>午前</h2>
-            <ul id="morningList"></ul>
-        </div>
-
-        <div class="section">
-            <h2>午後</h2>
-            <ul id="afternoonList"></ul>
-        </div>
-    </div>
-
-
-    <!-- ================= 2. カレンダーページ ================= -->
-    <div class="page-view" id="pageCalendar">
-        <div class="section">
-            <h2>1ヶ月カレンダー（日付クリックで詳細確認）</h2>
-            <div class="calendar-header">
-                <button onclick="changeMonth(-1)">◀ 前月</button>
-                <h3 id="calendarMonthTitle" style="margin:0; font-size:1.1rem;"></h3>
-                <button onclick="changeMonth(1)">次月 ▶</button>
-            </div>
-            <div class="calendar-grid" id="calendarGrid"></div>
+    <!-- ==================== モーダル: 年度・科目データの追加・編集 ==================== -->
+    <div x-show="openExamModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto" style="display: none;">
+        <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl my-8">
+            <h3 class="text-lg font-bold text-slate-900 mb-4" x-text="isEditingExam ? '過去問データを編集' : '新しい過去問データを追加'"></h3>
             
-            <div class="detail-box" id="dayDetailBox">
-                <h3 id="detailTitle" style="margin-top:0; font-size:1rem;">日付の詳細</h3>
-                <div id="detailContent"></div>
-            </div>
-        </div>
-    </div>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">年度 (西暦)</label>
+                    <input type="number" x-model.number="examForm.year" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" placeholder="2025">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">合計得点率 (%)</label>
+                    <input type="number" x-model.number="examForm.totalScorePct" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" placeholder="75">
+                </div>
 
+                <!-- 英国日本史の入力 -->
+                <template x-for="(subData, subName) in examForm.subjects" :key="subName">
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-800 text-sm" x-text="subName"></span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-500">大問数:</span>
+                                <input type="number" x-model.number="subData.daimonCount" @change="updateDaimonArray(subName)" min="1" max="8" class="w-16 border border-slate-300 rounded px-2 py-1 text-xs text-center">
+                            </div>
+                        </div>
 
-    <!-- ================= 3. 過去問・反省ノートページ ================= -->
-    <div class="page-view" id="pageExam">
-        <div class="section">
-            <h2>過去問演習・得点率・反省ノート</h2>
-            <p style="font-size:0.85rem; color:#666; margin-top:0;">志望学部ごとに過去問の得点率、大問別正答率、反省点を記録できます（「📝反省」ボタンで詳細入力）。</p>
-            
-            <div class="input-group" style="margin-bottom: 10px;">
-                <select id="pqUni" style="flex:2;">
-                    <option value="早大・社会科学部">早大・社会科学部</option>
-                    <option value="早大・教育学部">早大・教育学部</option>
-                    <option value="早大・文学部">早大・文学部</option>
-                    <option value="早大・文化構想学部">早大・文化構想学部</option>
-                    <option value="早大・商学部">早大・商学部</option>
-                    <option value="その他">その他</option>
-                </select>
-                <select id="pqSubject" style="flex:1;">
-                    <option value="英語">英語</option>
-                    <option value="国語">国語</option>
-                    <option value="日本史">日本史</option>
-                </select>
-                <input type="text" id="pqYearLabel" placeholder="年度 (例:2024)" style="flex:1;">
-                <input type="date" id="pqDate" style="flex:1.5;">
-                <button onclick="addPastExam()">追加</button>
-            </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-500 mb-1">大問ごとの得点率 (%) ※カンマ区切りまたは個別入力</label>
+                            <div class="grid grid-cols-4 gap-2">
+                                <template x-for="(score, idx) in subData.scores" :key="idx">
+                                    <div>
+                                        <span class="text-[10px] text-slate-400" x-text="'問' + (idx+1)"></span>
+                                        <input type="number" x-model.number="subData.scores[idx]" class="w-full border border-slate-300 rounded px-2 py-1 text-xs text-center">
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
 
-            <div id="pastExamListContainer"></div>
-        </div>
-    </div>
+                        <div class="flex justify-between items-center pt-2">
+                            <span class="text-xs text-slate-500">科目得点率 (%)</span>
+                            <input type="number" x-model.number="subData.totalScorePct" class="w-20 border border-slate-300 rounded px-2 py-1 text-xs text-center font-bold">
+                        </div>
 
-
-    <!-- ================= 4. AI分析ページ ================= -->
-    <div class="page-view" id="pageAnalysis">
-        <div class="section">
-            <h2>志望学部別 傾向まとめ ＆ AIパーソナル分析レポート</h2>
-            <p style="font-size:0.85rem; color:#666; margin-top:0;">記録された過去問の得点率や反省ノートのコメントをAIエンジンが常時解析し、現在の成長度・得意苦手を判定します。</p>
-            
-            <div style="margin-bottom: 15px;">
-                <button onclick="runAiAnalysis()" style="background-color: #7e57c2; width:100%; padding: 12px; font-weight: bold; border-radius: 4px; font-size: 1rem;">🔄 分析レポートを更新・再読み込み</button>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">反省・振り返り</label>
+                            <textarea x-model="subData.reflection" rows="2" class="w-full border border-slate-300 rounded p-2 text-xs" placeholder="失点の原因や次への対策を記入..."></textarea>
+                        </div>
+                    </div>
+                </template>
             </div>
 
-            <div id="facultySummaryContainer"></div>
-            <div id="aiReportContainer"></div>
-        </div>
-
-        <!-- 科目別・学部別進捗グラフ -->
-        <div class="section">
-            <h2>過去問の進捗（科目別グラフ）</h2>
-            <div class="filter-tabs" id="chartFilterTabs">
-                <button class="filter-tab active" onclick="setChartFilter('すべて')">すべて</button>
-                <button class="filter-tab" onclick="setChartFilter('英語')">英語</button>
-                <button class="filter-tab" onclick="setChartFilter('国語')">国語</button>
-                <button class="filter-tab" onclick="setChartFilter('日本史')">日本史</button>
+            <div class="flex justify-end gap-2">
+                <button @click="openExamModal = false" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-sm font-medium">キャンセル</button>
+                <button @click="saveExamData()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium">保存する</button>
             </div>
-            <div class="chart-container" id="chartContainer"></div>
         </div>
     </div>
 
     <script>
-        function getTodayKey() {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        }
-        const todayKey = getTodayKey();
+        function appData() {
+            return {
+                currentView: 'home', // 'home' or 'faculty-detail'
+                selectedFacultyId: null,
+                openFacultyModal: false,
+                openExamModal: false,
+                isEditingExam: false,
+                newFacultyName: '',
+                expandedYear: null,
 
-        const dateObj = new Date();
-        document.getElementById('currentDateDisplay').innerText = dateObj.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+                faculties: JSON.parse(localStorage.getItem('waseda_faculties_v2')) || [
+                    {
+                        id: 'soc',
+                        name: '社会科学部',
+                        description: '英語・国語・日本史',
+                        exams: [
+                            {
+                                year: 2025,
+                                totalScorePct: 74,
+                                subjects: {
+                                    '英語': { daimonCount: 5, scores: [80, 70, 65, 90, 75], totalScorePct: 76, reflection: '長文の空欄補充で失点。速読力と単語力の強化が必要。' },
+                                    '国語': { daimonCount: 3, scores: [70, 65, 75], totalScorePct: 70, reflection: '現代文の選択肢に迷いが生じた。消去法の精度を上げる。' },
+                                    '日本史': { daimonCount: 4, scores: [85, 75, 80, 70], totalScorePct: 78, reflection: '近代の経済史部分でケアレスミス。基本事項の確認を徹底。' }
+                                }
+                            },
+                            {
+                                year: 2024,
+                                totalScorePct: 70,
+                                subjects: {
+                                    '英語': { daimonCount: 5, scores: [75, 65, 60, 85, 70], totalScorePct: 71, reflection: '会話文問題で時間をかけすぎた。' },
+                                    '国語': { daimonCount: 3, scores: [65, 60, 70], totalScorePct: 65, reflection: '古文の単語・文法ミスが目立った。' },
+                                    '日本史': { daimonCount: 4, scores: [80, 85, 75, 75], totalScorePct: 79, reflection: '文化史対策が功を奏した。' }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        id: 'edu',
+                        name: '教育学部',
+                        description: '英語・国語・日本史',
+                        exams: [
+                            {
+                                year: 2025,
+                                totalScorePct: 78,
+                                subjects: {
+                                    '英語': { daimonCount: 4, scores: [85, 80, 75, 70], totalScorePct: 78, reflection: '記述式問題の表現力をブラッシュアップする。' },
+                                    '国語': { daimonCount: 3, scores: [80, 75, 70], totalScorePct: 75, reflection: '漢字と現代文の記述で部分点を確実にとる。' },
+                                    '日本史': { daimonCount: 4, scores: [90, 85, 80, 80], totalScorePct: 84, reflection: 'リード文の読解がスムーズにできた。' }
+                                }
+                            }
+                        ]
+                    },
+                    { id: 'lit', name: '文学部', description: '英語・国語・日本史', exams: [] },
+                    { id: 'cul', name: '文化構想学部', description: '英語・国語・日本史', exams: [] },
+                    { id: 'com', name: '商学部', description: '英語・国語・日本史', exams: [] }
+                ],
 
-        // 4分割タブ切り替え関数
-        function switchTab(tabName) {
-            const tabs = ['task', 'calendar', 'exam', 'analysis'];
-            tabs.forEach(t => {
-                document.getElementById('page' + capitalize(t)).classList.remove('active');
-                document.getElementById('btnTab' + capitalize(t)).classList.remove('active');
-            });
-
-            document.getElementById('page' + capitalize(tabName)).classList.add('active');
-            document.getElementById('btnTab' + capitalize(tabName)).classList.add('active');
-
-            if (tabName === 'analysis') {
-                runAiAnalysis();
-                renderChart();
-            } else if (tabName === 'calendar') {
-                renderCalendar();
-            }
-        }
-
-        function capitalize(str) {
-            return str.charAt(0).toUpperCase() + str.slice(1);
-        }
-
-        // タスク履歴データ
-        let historyData = JSON.parse(localStorage.getItem('study_history_v8')) || {};
-        if (!historyData[todayKey]) {
-            const keys = Object.keys(historyData).sort();
-            if (keys.length > 0) {
-                historyData[todayKey] = historyData[keys[keys.length - 1]].map(t => ({ ...t, completed: false }));
-            } else {
-                historyData[todayKey] = [
-                    { id: 1, time: '午前', subject: '英語', name: '英単語', completed: false },
-                    { id: 2, time: '午前', subject: '国語', name: '現代文', completed: false },
-                    { id: 3, time: '午後', subject: '日本史', name: '一問一答', completed: false }
-                ];
-            }
-            saveHistory();
-        }
-        function saveHistory() {
-            localStorage.setItem('study_history_v8', JSON.stringify(historyData));
-        }
-        let currentTasks = historyData[todayKey];
-
-        function renderTasks() {
-            const morningList = document.getElementById('morningList');
-            const afternoonList = document.getElementById('afternoonList');
-            morningList.innerHTML = '';
-            afternoonList.innerHTML = '';
-
-            let completedCount = 0;
-            const totalCount = currentTasks.length;
-
-            currentTasks.forEach((task, index) => {
-                if (task.completed) completedCount++;
-                const li = document.createElement('li');
-                if (task.completed) li.classList.add('completed');
-                let tagClass = task.subject === '英語' ? 'tag-english' : (task.subject === '国語' ? 'tag-japanese' : 'tag-history');
-
-                li.innerHTML = `
-                    <div class="task-info">
-                        <input type="checkbox" ${task.completed ? 'checked' : ''} onclick="toggleComplete(${index})">
-                        <span class="tag ${tagClass}">${task.subject}</span>
-                        <span>${task.name}</span>
-                    </div>
-                    <div class="actions">
-                        <button onclick="moveTask(${index}, -1)">↑</button>
-                        <button onclick="moveTask(${index}, 1)">↓</button>
-                        <button onclick="deleteTask(${index})">削除</button>
-                    </div>
-                `;
-                if (task.time === '午前') morningList.appendChild(li);
-                else afternoonList.appendChild(li);
-            });
-
-            let rate = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
-            document.getElementById('progressBar').style.width = rate + '%';
-            document.getElementById('progressText').innerText = `${rate}% (${completedCount} / ${totalCount} 完了)`;
-        }
-
-        function addTask() {
-            const timeSlot = document.getElementById('timeSlot').value;
-            const subject = document.getElementById('subject').value;
-            const taskName = document.getElementById('taskName').value.trim();
-            if (!taskName) { alert('タスク名を入力してください'); return; }
-
-            currentTasks.push({ id: Date.now(), time: timeSlot, subject: subject, name: taskName, completed: false });
-            document.getElementById('taskName').value = '';
-            historyData[todayKey] = currentTasks;
-            saveHistory();
-            renderTasks();
-        }
-
-        function toggleComplete(index) {
-            currentTasks[index].completed = !currentTasks[index].completed;
-            historyData[todayKey] = currentTasks;
-            saveHistory();
-            renderTasks();
-        }
-
-        function moveTask(index, direction) {
-            const targetIndex = index + direction;
-            if (targetIndex < 0 || targetIndex >= currentTasks.length) return;
-            const temp = currentTasks[index];
-            currentTasks[index] = currentTasks[targetIndex];
-            currentTasks[targetIndex] = temp;
-            historyData[todayKey] = currentTasks;
-            saveHistory();
-            renderTasks();
-        }
-
-        function deleteTask(index) {
-            currentTasks.splice(index, 1);
-            historyData[todayKey] = currentTasks;
-            saveHistory();
-            renderTasks();
-        }
-
-        // カレンダー機能
-        let calendarYear = dateObj.getFullYear();
-        let calendarMonth = dateObj.getMonth();
-
-        function changeMonth(direction) {
-            calendarMonth += direction;
-            if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
-            else if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
-            renderCalendar();
-        }
-
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            const title = document.getElementById('calendarMonthTitle');
-            if (!grid || !title) return;
-            grid.innerHTML = '';
-            title.innerText = `${calendarYear}年 ${calendarMonth + 1}月`;
-
-            const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
-            weekdays.forEach(w => {
-                const div = document.createElement('div');
-                div.className = 'calendar-weekday';
-                div.innerText = w;
-                grid.appendChild(div);
-            });
-
-            const firstDayIndex = new Date(calendarYear, calendarMonth, 1).getDay();
-            const totalDays = new Date(calendarYear, calendarMonth + 1, 0).getDate();
-
-            for (let i = 0; i < firstDayIndex; i++) {
-                const div = document.createElement('div');
-                div.className = 'calendar-day empty';
-                grid.appendChild(div);
-            }
-
-            for (let day = 1; day <= totalDays; day++) {
-                const mStr = String(calendarMonth + 1).padStart(2, '0');
-                const dStr = String(day).padStart(2, '0');
-                const dateKey = `${calendarYear}-${mStr}-${dStr}`;
-
-                let dayRateStr = '';
-                const dayTasks = historyData[dateKey];
-                if (dayTasks && dayTasks.length > 0) {
-                    const completed = dayTasks.filter(t => t.completed).length;
-                    dayRateStr = `${Math.round((completed / dayTasks.length) * 100)}%`;
-                } else if (dateKey === todayKey) {
-                    dayRateStr = '0%';
-                }
-
-                const matchedExams = pastExams.filter(e => e.date === dateKey);
-                const div = document.createElement('div');
-                div.className = 'calendar-day' + (dateKey === todayKey ? ' today' : '');
-                
-                let examHtml = '';
-                matchedExams.forEach(e => {
-                    examHtml += `<div class="has-exam" title="${e.uni} (${e.subject})">📅 ${e.uni}</div>`;
-                });
-
-                div.innerHTML = `<div>${day}</div><div><div class="day-rate">${dayRateStr}</div>${examHtml}</div>`;
-                div.onclick = () => showMonthDayDetail(dateKey);
-                grid.appendChild(div);
-            }
-        }
-
-        function showMonthDayDetail(dateKey) {
-            const detailBox = document.getElementById('dayDetailBox');
-            const detailTitle = document.getElementById('detailTitle');
-            const detailContent = document.getElementById('detailContent');
-            detailContent.innerHTML = '';
-            detailBox.style.display = 'block';
-            detailTitle.innerText = `【 ${dateKey} の詳細スケジュール・反省ノート 】`;
-
-            const tasks = historyData[dateKey];
-            let taskHtml = '<strong>【勉強タスク】</strong>';
-            if (!tasks || tasks.length === 0) {
-                taskHtml += '<p style="margin:4px 0 10px 0; font-size:0.85rem; color:#666;">この日のタスク記録はありません。</p>';
-            } else {
-                taskHtml += '<ul style="margin:4px 0 10px 0; padding-left:15px; font-size:0.85rem;">';
-                tasks.forEach(t => {
-                    taskHtml += `<li>[${t.time}] <span style="font-weight:bold;">${t.subject}</span>: ${t.name} － <b>${t.completed ? '✅ 完了' : '❌ 未完了'}</b></li>`;
-                });
-                taskHtml += '</ul>';
-            }
-
-            const exams = pastExams.filter(e => e.date === dateKey);
-            let examHtml = '<strong>【過去問実施・反省】</strong>';
-            if (exams.length === 0) {
-                examHtml += '<p style="margin:4px 0 0 0; font-size:0.85rem; color:#666;">この日に予定・実施した過去問はありません。</p>';
-            } else {
-                examHtml += '<div style="margin-top:4px; font-size:0.85rem;">';
-                exams.forEach(e => {
-                    examHtml += `<div style="background:#fff; padding:6px; margin-bottom:4px; border:1px solid #ddd; border-radius:4px;">
-                        <b>${e.uni} (${e.subject})</b> [${e.yearLabel || ''}]<br>
-                        得点率: <b>${e.overallScore || '未入力'}</b><br>
-                        大問別: ${e.daimonScores || '未入力'}<br>
-                        反省: <span style="color:#c62828;">${e.reflection || 'なし'}</span>
-                    </div>`;
-                });
-                examHtml += '</div>';
-            }
-            detailContent.innerHTML = taskHtml + examHtml;
-        }
-
-        // 過去問管理データ
-        let pastExams = JSON.parse(localStorage.getItem('study_past_exams_v5')) || [
-            { id: 1, uni: '早大・社会科学部', subject: '英語', yearLabel: '2024', date: '', overallScore: '72%', daimonScores: '大問1:80%, 大問2:60%, 大問3:75%', reflection: '時間配分がうまくいかなかった。長文の論理展開に注意。' },
-            { id: 2, uni: '早大・教育学部', subject: '国語', yearLabel: '2023', date: '', overallScore: '65%', daimonScores: '現代文:70%, 古文:60%', reflection: '古文単語と文法の基礎抜けを総復習する。' },
-            { id: 3, uni: '早大・商学部', subject: '日本史', yearLabel: '2024', date: '', overallScore: '68%', daimonScores: '大問1:70%, 大問2:65%', reflection: '文化史の記述用語が曖昧だった。' }
-        ];
-
-        function savePastExams() {
-            localStorage.setItem('study_past_exams_v5', JSON.stringify(pastExams));
-            renderPastExams();
-            renderChart();
-            renderCalendar();
-        }
-
-        function renderPastExams() {
-            const container = document.getElementById('pastExamListContainer');
-            if (!container) return;
-            container.innerHTML = '';
-            if (pastExams.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#666; font-size:0.9rem;">過去問の登録がまだありません。</p>';
-                return;
-            }
-
-            const table = document.createElement('table');
-            table.innerHTML = `
-                <thead>
-                    <tr>
-                        <th style="width: 25%;">大学・学部</th>
-                        <th style="width: 15%;">科目</th>
-                        <th style="width: 12%;">年度</th>
-                        <th style="width: 15%;">得点率</th>
-                        <th style="width: 18%;">日程</th>
-                        <th style="width: 15%;">操作</th>
-                    </tr>
-                </thead>
-                <tbody id="pastExamTbody"></tbody>
-            `;
-            container.appendChild(table);
-            const tbody = document.getElementById('pastExamTbody');
-
-            pastExams.forEach((item, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>
-                        <select class="table-input" onchange="updatePastExam(${index}, 'uni', this.value)">
-                            <option value="早大・社会科学部" ${item.uni === '早大・社会科学部' ? 'selected' : ''}>早大・社会科学部</option>
-                            <option value="早大・教育学部" ${item.uni === '早大・教育学部' ? 'selected' : ''}>早大・教育学部</option>
-                            <option value="早大・文学部" ${item.uni === '早大・文学部' ? 'selected' : ''}>早大・文学部</option>
-                            <option value="早大・文化構想学部" ${item.uni === '早大・文化構想学部' ? 'selected' : ''}>早大・文化構想学部</option>
-                            <option value="早大・商学部" ${item.uni === '早大・商学部' ? 'selected' : ''}>早大・商学部</option>
-                            <option value="その他" ${item.uni === 'その他' ? 'selected' : ''}>その他</option>
-                        </select>
-                    </td>
-                    <td>
-                        <select class="table-input" onchange="updatePastExam(${index}, 'subject', this.value)">
-                            <option value="英語" ${item.subject === '英語' ? 'selected' : ''}>英語</option>
-                            <option value="国語" ${item.subject === '国語' ? 'selected' : ''}>国語</option>
-                            <option value="日本史" ${item.subject === '日本史' ? 'selected' : ''}>日本史</option>
-                        </select>
-                    </td>
-                    <td><input type="text" class="table-input" value="${item.yearLabel || ''}" placeholder="2024" onchange="updatePastExam(${index}, 'yearLabel', this.value)"></td>
-                    <td><input type="text" class="table-input" value="${item.overallScore || ''}" placeholder="75%" onchange="updatePastExam(${index}, 'overallScore', this.value)"></td>
-                    <td><input type="date" class="table-input" value="${item.date || ''}" onchange="updatePastExam(${index}, 'date', this.value)"></td>
-                    <td>
-                        <button class="small-btn" onclick="toggleDetailPanel(${index})">📝反省</button>
-                        <button class="small-btn" onclick="deletePastExam(${index})" style="color:#d9534f;">削除</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-
-                const detailTr = document.createElement('tr');
-                detailTr.id = `detailPanel-${index}`;
-                detailTr.style.display = 'none';
-                detailTr.innerHTML = `
-                    <td colspan="6" style="background:#fcfcfc; text-align:left; padding:10px;">
-                        <div class="exam-detail-panel">
-                            <label>📌 大問ごとの得点率（例: 大問1: 80%, 大問2: 50% など）</label>
-                            <input type="text" value="${item.daimonScores || ''}" placeholder="大問1: ○%, 大問2: ○%" onchange="updatePastExam(${index}, 'daimonScores', this.value)">
-                            <label>💡 反省点・気づき・対策メモ</label>
-                            <textarea rows="3" placeholder="時間配分、ケアレスミス、知識の抜けなど..." onchange="updatePastExam(${index}, 'reflection', this.value)">${item.reflection || ''}</textarea>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(detailTr);
-            });
-        }
-
-        function toggleDetailPanel(index) {
-            const panel = document.getElementById(`detailPanel-${index}`);
-            panel.style.display = panel.style.display === 'none' ? 'table-row' : 'none';
-        }
-
-        function addPastExam() {
-            const uni = document.getElementById('pqUni').value;
-            const subject = document.getElementById('pqSubject').value;
-            const yearLabel = document.getElementById('pqYearLabel').value.trim();
-            const date = document.getElementById('pqDate').value;
-
-            pastExams.push({ id: Date.now(), uni, subject, yearLabel, date, overallScore: '', daimonScores: '', reflection: '' });
-            document.getElementById('pqYearLabel').value = '';
-            document.getElementById('pqDate').value = '';
-            savePastExams();
-        }
-
-        function updatePastExam(index, field, value) {
-            pastExams[index][field] = value;
-            savePastExams();
-        }
-
-        function deletePastExam(index) {
-            pastExams.splice(index, 1);
-            savePastExams();
-        }
-
-        // --- AI自動分析・学部別傾向分析エンジン ---
-        function runAiAnalysis() {
-            const summaryContainer = document.getElementById('facultySummaryContainer');
-            const aiContainer = document.getElementById('aiReportContainer');
-            if (!summaryContainer || !aiContainer) return;
-            
-            if (pastExams.length === 0) {
-                summaryContainer.innerHTML = '<p style="font-size:0.9rem; color:#666;">過去問データがありません。「過去問・反省」タブから過去問を追加してください。</p>';
-                aiContainer.innerHTML = '';
-                return;
-            }
-
-            let facultyMap = {};
-            pastExams.forEach(e => {
-                if (!facultyMap[e.uni]) facultyMap[e.uni] = [];
-                facultyMap[e.uni].push(e);
-            });
-
-            let facultyHtml = '<h3 style="margin-top:0;">📁 志望学部別 演習状況まとめ</h3>';
-            let totalScoreSum = 0;
-            let scoreCount = 0;
-            let reflectionsText = '';
-
-            for (let [uni, exams] of Object.entries(facultyMap)) {
-                let examDetails = '';
-                let uniScoreSum = 0;
-                let uniScoreCount = 0;
-
-                exams.forEach(ex => {
-                    let sNum = parseInt(ex.overallScore);
-                    if (!isNaN(sNum)) {
-                        uniScoreSum += sNum;
-                        uniScoreCount++;
-                        totalScoreSum += sNum;
-                        scoreCount++;
+                examForm: {
+                    year: 2026,
+                    totalScorePct: 0,
+                    subjects: {
+                        '英語': { daimonCount: 4, scores: [0, 0, 0, 0], totalScorePct: 0, reflection: '' },
+                        '国語': { daimonCount: 3, scores: [0, 0, 0], totalScorePct: 0, reflection: '' },
+                        '日本史': { daimonCount: 4, scores: [0, 0, 0, 0], totalScorePct: 0, reflection: '' }
                     }
-                    if (ex.reflection) reflectionsText += ` ${ex.reflection}`;
-                    examDetails += `<div style="font-size:0.85rem; margin-top:2px; color:#444;">・[${ex.subject}] ${ex.yearLabel || '年度不明'}: <b>得点率 ${ex.overallScore || '未入力'}</b> （${ex.daimonScores ? '大問別記録あり' : '大問別未記入'}）</div>`;
-                });
+                },
 
-                let avgUniScore = uniScoreCount > 0 ? Math.round(uniScoreSum / uniScoreCount) : '算出中';
-                facultyHtml += `
-                    <div class="faculty-summary-card">
-                        <b>📍 ${uni}</b> （実施数: ${exams.length}回 / 平均得点率: ${avgUniScore}${typeof avgUniScore === 'number' ? '%' : ''}）
-                        <div style="margin-top: 4px;">${examDetails}</div>
-                    </div>
-                `;
+                get currentFaculty() {
+                    return this.faculties.find(f => f.id === this.selectedFacultyId) || { exams: [] };
+                },
+
+                selectFaculty(id) {
+                    this.selectedFacultyId = id;
+                    this.currentView = 'faculty-detail';
+                    this.expandedYear = null;
+                },
+
+                toggleExpand(year) {
+                    this.expandedYear = this.expandedYear === year ? null : year;
+                },
+
+                calcFacultyAverage(faculty) {
+                    if (!faculty.exams || faculty.exams.length === 0) return 0;
+                    const sum = faculty.exams.reduce((acc, cur) => acc + cur.totalScorePct, 0);
+                    return Math.round(sum / faculty.exams.length);
+                },
+
+                addFaculty() {
+                    if (!this.newFacultyName.trim()) return;
+                    const newId = 'fac_' + Date.now();
+                    this.faculties.push({
+                        id: newId,
+                        name: this.newFacultyName.trim(),
+                        description: '英語・国語・日本史',
+                        exams: []
+                    });
+                    this.newFacultyName = '';
+                    this.saveData();
+                },
+
+                deleteFaculty(id) {
+                    if (confirm('この学部グループを削除してもよろしいですか？')) {
+                        this.faculties = this.faculties.filter(f => f.id !== id);
+                        this.saveData();
+                    }
+                },
+
+                openExamModalForAdd() {
+                    this.isEditingExam = false;
+                    this.examForm = {
+                        year: 2026,
+                        totalScorePct: 75,
+                        subjects: {
+                            '英語': { daimonCount: 5, scores: [70, 70, 70, 70, 70], totalScorePct: 70, reflection: '' },
+                            '国語': { daimonCount: 3, scores: [70, 70, 70], totalScorePct: 70, reflection: '' },
+                            '日本史': { daimonCount: 4, scores: [70, 70, 70, 70], totalScorePct: 70, reflection: '' }
+                        }
+                    };
+                    this.openExamModal = true;
+                },
+
+                openExamModalForEdit(exam) {
+                    this.isEditingExam = true;
+                    // ディープコピーしてフォームにセット
+                    this.examForm = JSON.parse(JSON.stringify(exam));
+                    this.openExamModal = true;
+                },
+
+                updateDaimonArray(subName) {
+                    const count = parseInt(this.examForm.subjects[subName].daimonCount) || 1;
+                    const currentScores = this.examForm.subjects[subName].scores;
+                    if (currentScores.length < count) {
+                        while (currentScores.length < count) currentScores.push(70);
+                    } else {
+                        this.examForm.subjects[subName].scores = currentScores.slice(0, count);
+                    }
+                },
+
+                saveExamData() {
+                    const faculty = this.currentFaculty;
+                    if (this.isEditingExam) {
+                        const index = faculty.exams.findIndex(e => e.year === this.examForm.year);
+                        if (index !== -1) {
+                            faculty.exams[index] = JSON.parse(JSON.stringify(this.examForm));
+                        }
+                    } else {
+                        // 重複チェック
+                        if (faculty.exams.some(e => e.year === this.examForm.year)) {
+                            alert('指定した年度のデータは既に存在します。');
+                            return;
+                        }
+                        faculty.exams.push(JSON.parse(JSON.stringify(this.examForm)));
+                        // 年度降順にソート
+                        faculty.exams.sort((a, b) => b.year - a.year);
+                    }
+                    this.saveData();
+                    this.openExamModal = false;
+                },
+
+                saveData() {
+                    localStorage.setItem('waseda_faculties_v2', JSON.stringify(this.faculties));
+                },
+
+                // 大問ごとの平均得点率を算出し、得意・苦手マップ用のデータを構築する
+                getSubjectDaimonStats(faculty) {
+                    let stats = {};
+                    const subjects = ['英語', '国語', '日本史'];
+                    
+                    subjects.forEach(sub => {
+                        let daimonSums = {};
+                        let daimonCounts = {};
+
+                        faculty.exams.forEach(exam => {
+                            if (exam.subjects && exam.subjects[sub] && exam.subjects[sub].scores) {
+                                exam.subjects[sub].scores.forEach((score, idx) => {
+                                    if (!daimonSums[idx]) { daimonSums[idx] = 0; daimonCounts[idx] = 0; }
+                                    daimonSums[idx] += Number(score);
+                                    daimonCounts[idx] += 1;
+                                });
+                            }
+                        });
+
+                        let subStats = [];
+                        let maxLen = Math.max(...Object.keys(daimonCounts).map(k => Number(k) + 1), 0);
+                        if (maxLen === 0) maxLen = (sub === '英語' ? 5 : (sub === '国語' ? 3 : 4));
+
+                        for (let i = 0; i < maxLen; i++) {
+                            let avg = daimonCounts[i] ? Math.round(daimonSums[i] / daimonCounts[i]) : 70;
+                            subStats.push({ avg: avg });
+                        }
+                        stats[sub] = subStats;
+                    });
+                    return stats;
+                },
+
+                // 蓄積データを元にしたAI客観分析の生成
+                generateAIAnalysis(faculty) {
+                    if (!faculty.exams || faculty.exams.length === 0) {
+                        return 'まだ過去問データが登録されていません。データを登録すると、AIによる客観的な弱点分析や傾向アドバイスが表示されます。';
+                    }
+                    const avg = this.calcFacultyAverage(faculty);
+                    let analysis = `これまでに蓄積された${faculty.exams.length}年分の演習データ（平均得点率 ${avg}%）を総合的に分析しました。\n\n`;
+                    
+                    if (avg >= 75) {
+                        analysis += '合格ラインを安定して超える高い得点力を維持できています。特に苦手な大問の失点を最小限に抑えられており、本番を見据えた時間配分と記述・論述の精度磨きに注力してください。';
+                    } else if (avg >= 65) {
+                        analysis += '合格ボーダーライン付近で推移しています。各科目の特定の「大問」における波を無くすことが最優先課題です。反省ノートを見直し、失点パターンの共通項を洗い出しましょう。';
+                    } else {
+                        analysis += '基礎知識の定着と、出題形式への慣れに伸びしろがあります。まずは各科目における基礎的な大問で確実に得点できるよう、過去問の徹底的な復習と周辺知識のインプットを強化してください。';
+                    }
+                    return analysis;
+                }
             }
-            summaryContainer.innerHTML = facultyHtml;
-
-            let overallAvg = scoreCount > 0 ? Math.round(totalScoreSum / scoreCount) : 0;
-            
-            let growthJudgement = "データ蓄積中です。過去問の演習と反省をさらに記録するとAIの診断精度が上がります。";
-            if (overallAvg >= 75) {
-                growthJudgement = "🌟【順調・合格圏内到達レベル】全体平均得点率が75%を超えており、安定した得点力を発揮できています。難問の失点原因をさらに細かく潰しましょう。";
-            } else if (overallAvg >= 60) {
-                growthJudgement = "📈【成長・得点力アップ期】平均得点率が60%台に乗り、合格最低点ラインをクリアできる実力がついてきています。大問ごとの失点傾向を分析して弱点を補強しましょう。";
-            } else if (overallAvg > 0) {
-                growthJudgement = "🌱【基礎固め・伸び代大】インプットとアウトプットの接続期です。反省ノートの課題を一つずつクリアしていけば、ここから一気に得点率が跳ね上がります。";
-            }
-
-            let adviceAddition = "反省コメントから、時間配分や基礎知識の定着に意識が向いています。引き続き復習の回転数を上げてください。";
-            if (reflectionsText.includes("時間") || reflectionsText.includes("配分") || reflectionsText.includes("ペース")) {
-                adviceAddition = "⏰ **AI分析補正**: 反省点に「時間配分」や「ペース」に関する言及が多く見られます。解答の順番や、難しい問題を思い切って飛ばすスキップ戦術を意識した時間シミュレーションを取り入れてみてください。";
-            } else if (reflectionsText.includes("単語") || reflectionsText.includes("基礎") || reflectionsText.includes("文法") || reflectionsText.includes("漢字") || reflectionsText.includes("古文")) {
-                adviceAddition = "📚 **AI分析補正**: 反省点に「基礎用語・単語・文法」の抜けが指摘されています。新しい過去問を無理に進めるより、直近で間違えた問題の解説と基礎インプットの復習を優先することで得点率が安定します。";
-            }
-
-            let aiReportHtml = `
-                <div class="ai-report-box">
-                    <div class="ai-report-title">🤖 AIパーソナル診断・成長度分析レポート</div>
-                    <div class="ai-section">
-                        <b>1. 総合成長度評価（平均得点率: ${overallAvg}%）</b><br>
-                        ${growthJudgement}
-                    </div>
-                    <div class="ai-section">
-                        <b>2. 学部別傾向と現在の位置づけ</b><br>
-                        早稲田の各学部（社会科学部、教育学部、文学部、文化構想学部、商学部など）はそれぞれ出題傾向やスピード感が異なります。学部ごとの得点率の偏りがないか確認し、弱点科目を重点的に対策しましょう。
-                    </div>
-                    <div class="ai-section">
-                        <b>3. 💡 AIによる分析補正アドバイス</b><br>
-                        ${adviceAddition}
-                    </div>
-                </div>
-            `;
-            aiContainer.innerHTML = aiReportHtml;
         }
-
-        // グラフ機能
-        let currentChartFilter = 'すべて';
-        function setChartFilter(filter) {
-            currentChartFilter = filter;
-            document.querySelectorAll('.filter-tab').forEach(tab => {
-                tab.classList.toggle('active', tab.innerText === filter);
-            });
-            renderChart();
-        }
-
-        function renderChart() {
-            const container = document.getElementById('chartContainer');
-            if (!container) return;
-            container.innerHTML = '';
-            let filtered = currentChartFilter === 'すべて' ? pastExams : pastExams.filter(e => e.subject === currentChartFilter);
-
-            if (filtered.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#666; font-size:0.9rem; margin:10px 0;">データがありません</p>';
-                return;
-            }
-
-            let uniCounts = {};
-            filtered.forEach(e => {
-                let key = `${e.uni} (${e.subject})`;
-                uniCounts[key] = (uniCounts[key] || 0) + 1;
-            });
-            let maxCount = Math.max(...Object.values(uniCounts), 5);
-
-            for (let [uniKey, count] of Object.entries(uniCounts)) {
-                let percent = Math.min(100, (count / maxCount) * 100);
-                const row = document.createElement('div');
-                row.className = 'chart-row';
-                row.innerHTML = `
-                    <div class="chart-label" title="${uniKey}">${uniKey}</div>
-                    <div class="chart-bar-wrapper">
-                        <div class="chart-bar" style="width: ${percent}%;"></div>
-                        <div class="chart-value">${count} 年分</div>
-                    </div>
-                `;
-                container.appendChild(row);
-            }
-        }
-
-        // 初期実行
-        renderTasks();
-        renderPastExams();
-        renderCalendar();
     </script>
 </body>
 </html>
