@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>受験勉強タスク＆過去問・反省管理アプリ</title>
+    <title>受験勉強タスク＆過去問・AI分析管理アプリ</title>
     <style>
         body {
             font-family: sans-serif;
-            max-width: 750px;
+            max-width: 780px;
             margin: 20px auto;
             padding: 20px;
             background-color: #f4f6f9;
@@ -91,10 +91,9 @@
             border-radius: 4px;
             font-weight: bold;
         }
-        /* 科目カラー */
-        .tag-english { background-color: #ffccf2; color: #660033; } /* 英語: 淡いピンク */
-        .tag-japanese { background-color: #ffe5cc; color: #663300; } /* 国語: 淡いオレンジ */
-        .tag-history { background-color: #ccffcc; color: #003300; } /* 日本史: 淡い緑 */
+        .tag-english { background-color: #ffccf2; color: #660033; }
+        .tag-japanese { background-color: #ffe5cc; color: #663300; }
+        .tag-history { background-color: #ccffcc; color: #003300; }
 
         .actions button, .small-btn {
             background: none;
@@ -110,7 +109,6 @@
             background: #eee;
         }
 
-        /* 完遂率メーター */
         .progress-container {
             background: #e0e0e0;
             border-radius: 4px;
@@ -137,7 +135,7 @@
             line-height: 20px;
         }
 
-        /* 1ヶ月カレンダー */
+        /* カレンダー */
         .calendar-header {
             display: flex;
             justify-content: space-between;
@@ -164,165 +162,92 @@
             padding: 4px;
             font-size: 0.8rem;
             cursor: pointer;
-            transition: background 0.2s;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
-        .calendar-day:hover {
-            background: #eaeaea;
-        }
-        .calendar-day.empty {
-            background: transparent;
-            border: none;
-            cursor: default;
-        }
-        .calendar-day.today {
-            border-color: #4a90e2;
-            background: #eef6fc;
-            font-weight: bold;
-        }
-        .day-rate {
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: #2e7d32;
-            text-align: right;
-        }
+        .calendar-day:hover { background: #eaeaea; }
+        .calendar-day.empty { background: transparent; border: none; cursor: default; }
+        .calendar-day.today { border-color: #4a90e2; background: #eef6fc; font-weight: bold; }
+        .day-rate { font-size: 0.8rem; font-weight: bold; color: #2e7d32; text-align: right; }
         .has-exam {
-            font-size: 0.65rem;
-            background: #e1f5fe;
-            color: #01579b;
-            padding: 1px 3px;
-            border-radius: 3px;
-            margin-top: 2px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            font-size: 0.65rem; background: #e1f5fe; color: #01579b;
+            padding: 1px 3px; border-radius: 3px; margin-top: 2px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
-
-        /* 詳細モーダル/エリア */
         .detail-box {
-            background: #fff8e1;
-            border: 1px solid #ffe082;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 15px;
-            display: none;
+            background: #fff8e1; border: 1px solid #ffe082;
+            padding: 12px; border-radius: 6px; margin-top: 15px; display: none;
         }
 
-        /* 過去問管理テーブル */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #f1f3f5;
-        }
-        .table-input {
-            width: 95%;
-            padding: 4px;
-            box-sizing: border-box;
-        }
-
-        /* 過去問詳細・反省点パネル */
+        /* テーブル */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f1f3f5; }
+        .table-input { width: 95%; padding: 4px; box-sizing: border-box; }
         .exam-detail-panel {
-            background: #fdfdfd;
-            border: 1px dashed #ccc;
-            padding: 12px;
-            margin-top: 6px;
-            border-radius: 6px;
-            text-align: left;
+            background: #fdfdfd; border: 1px dashed #ccc; padding: 12px;
+            margin-top: 6px; border-radius: 6px; text-align: left;
         }
         .exam-detail-panel label {
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: #555;
-            display: block;
-            margin-top: 6px;
+            font-size: 0.85rem; font-weight: bold; color: #555; display: block; margin-top: 6px;
         }
         .exam-detail-panel textarea, .exam-detail-panel input {
-            width: 100%;
-            margin-top: 2px;
-            padding: 6px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 0.9rem;
+            width: 100%; margin-top: 2px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem;
         }
 
-        /* 棒グラフエリア */
-        .filter-tabs {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 15px;
-        }
+        /* グラフ */
+        .filter-tabs { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
         .filter-tab {
-            padding: 5px 12px;
-            background: #eee;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            color: #333;
+            padding: 5px 12px; background: #eee; border: none;
+            border-radius: 4px; cursor: pointer; font-size: 0.9rem; color: #333;
         }
-        .filter-tab.active {
-            background: #4a90e2;
-            color: white;
+        .filter-tab.active { background: #4a90e2; color: white; font-weight: bold; }
+        .chart-container { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .chart-row { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+        .chart-label { width: 160px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chart-bar-wrapper { flex: 1; background: #eee; border-radius: 4px; height: 22px; position: relative; overflow: hidden; }
+        .chart-bar { background-color: #ff9800; height: 100%; width: 0%; transition: width 0.4s ease; }
+        .chart-value { position: absolute; right: 8px; top: 0; line-height: 22px; font-size: 0.8rem; font-weight: bold; color: #333; }
+
+        /* AI分析パネル特有のスタイル */
+        .ai-report-box {
+            background: linear-gradient(135deg, #f3e5f5, #e8eaf6);
+            border: 1px solid #d1c4e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .ai-report-title {
             font-weight: bold;
-        }
-        .chart-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .chart-row {
+            color: #512da8;
+            font-size: 1.05rem;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
+        }
+        .ai-section {
+            background: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            border-left: 4px solid #7e57c2;
             font-size: 0.9rem;
+            line-height: 1.5;
         }
-        .chart-label {
-            width: 160px;
-            text-align: right;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .chart-bar-wrapper {
-            flex: 1;
-            background: #eee;
-            border-radius: 4px;
-            height: 22px;
-            position: relative;
-            overflow: hidden;
-        }
-        .chart-bar {
-            background-color: #ff9800;
-            height: 100%;
-            width: 0%;
-            transition: width 0.4s ease;
-        }
-        .chart-value {
-            position: absolute;
-            right: 8px;
-            top: 0;
-            line-height: 22px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: #333;
+        .faculty-summary-card {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
         }
     </style>
 </head>
 <body>
 
-    <h1>受験勉強タスク＆過去問・反省管理</h1>
+    <h1>受験勉強タスク＆過去問・AI分析管理</h1>
     <div class="date-display" id="currentDateDisplay"></div>
 
     <!-- 今日の完遂率セクション -->
@@ -352,13 +277,11 @@
         </div>
     </div>
 
-    <!-- 午前リスト -->
     <div class="section">
         <h2>午前</h2>
         <ul id="morningList"></ul>
     </div>
 
-    <!-- 午後リスト -->
     <div class="section">
         <h2>午後</h2>
         <ul id="afternoonList"></ul>
@@ -369,7 +292,7 @@
         <h2>1ヶ月カレンダー（クリックして詳細確認）</h2>
         <div class="calendar-header">
             <button onclick="changeMonth(-1)">◀ 前月</button>
-            <h3 id="calendarMonthTitle" style="margin:0; font-size:1.1rem;">2026年9月</h3>
+            <h3 id="calendarMonthTitle" style="margin:0; font-size:1.1rem;"></h3>
             <button onclick="changeMonth(1)">次月 ▶</button>
         </div>
         <div class="calendar-grid" id="calendarGrid"></div>
@@ -380,13 +303,20 @@
         </div>
     </div>
 
-    <!-- 過去問演習・反省管理セクション -->
+    <!-- 過去問演習・反省ノートセクション -->
     <div class="section">
         <h2>過去問演習・得点率・反省ノート</h2>
-        <p style="font-size:0.85rem; color:#666; margin-top:0;">各大学学部の過去問について、得点率や大問別正答率、反省点を記録できます。</p>
+        <p style="font-size:0.85rem; color:#666; margin-top:0;">志望学部ごとに過去問の得点率、大問別正答率、反省点を記録できます。</p>
         
         <div class="input-group" style="margin-bottom: 10px;">
-            <input type="text" id="pqUni" placeholder="大学・学部 (例:早大・社学)" style="flex:2;">
+            <select id="pqUni" style="flex:2;">
+                <option value="早大・社会科学部">早大・社会科学部</option>
+                <option value="早大・教育学部">早大・教育学部</option>
+                <option value="早大・文学部">早大・文学部</option>
+                <option value="早大・文化構想学部">早大・文化構想学部</option>
+                <option value="早大・商学部">早大・商学部</option>
+                <option value="その他">その他</option>
+            </select>
             <select id="pqSubject" style="flex:1;">
                 <option value="英語">英語</option>
                 <option value="国語">国語</option>
@@ -400,7 +330,18 @@
         <div id="pastExamListContainer"></div>
     </div>
 
-    <!-- 過去問進捗 棒グラフセクション -->
+    <!-- 学部別傾向＆AIパーソナル診断セクション -->
+    <div class="section">
+        <h2>志望学部別 傾向まとめ ＆ AI分析レポート</h2>
+        <p style="font-size:0.85rem; color:#666; margin-top:0;">登録した得点率や反省ノートをAIエンジンが自動診断し、あなたの得意・苦手、成長度を分析して対策を補正します。</p>
+        
+        <button onclick="runAiAnalysis()" style="background-color: #7e57c2; width:100%; padding: 10px; font-weight: bold; border-radius: 4px; font-size: 1rem; margin-bottom: 10px;">✨ AI診断・成長度分析を実行する</button>
+
+        <div id="facultySummaryContainer"></div>
+        <div id="aiReportContainer"></div>
+    </div>
+
+    <!-- 進捗棒グラフセクション -->
     <div class="section">
         <h2>過去問の進捗（科目別グラフ）</h2>
         <div class="filter-tabs" id="chartFilterTabs">
@@ -417,16 +358,13 @@
             const d = new Date();
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         }
-
         const todayKey = getTodayKey();
 
-        // 日付表示
         const dateObj = new Date();
         document.getElementById('currentDateDisplay').innerText = dateObj.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 
-        // --- タスク履歴データ ---
-        let historyData = JSON.parse(localStorage.getItem('study_history_v6')) || {};
-
+        // タスク履歴データ
+        let historyData = JSON.parse(localStorage.getItem('study_history_v7')) || {};
         if (!historyData[todayKey]) {
             const keys = Object.keys(historyData).sort();
             if (keys.length > 0) {
@@ -440,11 +378,9 @@
             }
             saveHistory();
         }
-
         function saveHistory() {
-            localStorage.setItem('study_history_v6', JSON.stringify(historyData));
+            localStorage.setItem('study_history_v7', JSON.stringify(historyData));
         }
-
         let currentTasks = historyData[todayKey];
 
         function renderTasks() {
@@ -458,10 +394,8 @@
 
             currentTasks.forEach((task, index) => {
                 if (task.completed) completedCount++;
-
                 const li = document.createElement('li');
                 if (task.completed) li.classList.add('completed');
-
                 let tagClass = task.subject === '英語' ? 'tag-english' : (task.subject === '国語' ? 'tag-japanese' : 'tag-history');
 
                 li.innerHTML = `
@@ -476,7 +410,6 @@
                         <button onclick="deleteTask(${index})">削除</button>
                     </div>
                 `;
-
                 if (task.time === '午前') morningList.appendChild(li);
                 else afternoonList.appendChild(li);
             });
@@ -484,7 +417,6 @@
             let rate = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
             document.getElementById('progressBar').style.width = rate + '%';
             document.getElementById('progressText').innerText = `${rate}% (${completedCount} / ${totalCount} 完了)`;
-
             renderCalendar();
         }
 
@@ -492,11 +424,7 @@
             const timeSlot = document.getElementById('timeSlot').value;
             const subject = document.getElementById('subject').value;
             const taskName = document.getElementById('taskName').value.trim();
-
-            if (!taskName) {
-                alert('タスク名を入力してください');
-                return;
-            }
+            if (!taskName) { alert('タスク名を入力してください'); return; }
 
             currentTasks.push({ id: Date.now(), time: timeSlot, subject: subject, name: taskName, completed: false });
             document.getElementById('taskName').value = '';
@@ -530,19 +458,14 @@
             renderTasks();
         }
 
-        // --- 1ヶ月カレンダー機能 ---
+        // カレンダー機能
         let calendarYear = dateObj.getFullYear();
         let calendarMonth = dateObj.getMonth();
 
         function changeMonth(direction) {
             calendarMonth += direction;
-            if (calendarMonth > 11) {
-                calendarMonth = 0;
-                calendarYear++;
-            } else if (calendarMonth < 0) {
-                calendarMonth = 11;
-                calendarYear--;
-            }
+            if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+            else if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
             renderCalendar();
         }
 
@@ -584,7 +507,6 @@
                 }
 
                 const matchedExams = pastExams.filter(e => e.date === dateKey);
-
                 const div = document.createElement('div');
                 div.className = 'calendar-day' + (dateKey === todayKey ? ' today' : '');
                 
@@ -593,13 +515,7 @@
                     examHtml += `<div class="has-exam" title="${e.uni} (${e.subject})">📅 ${e.uni}</div>`;
                 });
 
-                div.innerHTML = `
-                    <div>${day}</div>
-                    <div>
-                        <div class="day-rate">${dayRateStr}</div>
-                        ${examHtml}
-                    </div>
-                `;
+                div.innerHTML = `<div>${day}</div><div><div class="day-rate">${dayRateStr}</div>${examHtml}</div>`;
                 div.onclick = () => showMonthDayDetail(dateKey);
                 grid.appendChild(div);
             }
@@ -610,7 +526,6 @@
             const detailTitle = document.getElementById('detailTitle');
             const detailContent = document.getElementById('detailContent');
             detailContent.innerHTML = '';
-
             detailBox.style.display = 'block';
             detailTitle.innerText = `【 ${dateKey} の詳細スケジュール・反省ノート 】`;
 
@@ -634,35 +549,35 @@
                 examHtml += '<div style="margin-top:4px; font-size:0.85rem;">';
                 exams.forEach(e => {
                     examHtml += `<div style="background:#fff; padding:6px; margin-bottom:4px; border:1px solid #ddd; border-radius:4px;">
-                        <b>${e.uni} (${e.subject})</b> [年度: ${e.yearLabel || '未設定'}]<br>
+                        <b>${e.uni} (${e.subject})</b> [${e.yearLabel || ''}]<br>
                         総合得点率: <b>${e.overallScore || '未入力'}</b><br>
-                        大問別得点: ${e.daimonScores || '未入力'}<br>
-                        反省点: <span style="color:#c62828;">${e.reflection || 'なし'}</span>
+                        大問別: ${e.daimonScores || '未入力'}<br>
+                        反省: <span style="color:#c62828;">${e.reflection || 'なし'}</span>
                     </div>`;
                 });
                 examHtml += '</div>';
             }
-
             detailContent.innerHTML = taskHtml + examHtml;
         }
 
-        // --- 過去問演習・反省ノート機能 ---
-        let pastExams = JSON.parse(localStorage.getItem('study_past_exams_v3')) || [
-            { id: 1, uni: '早大・社会科学部', subject: '英語', yearLabel: '2024', date: '', overallScore: '72%', daimonScores: '大問1:80%, 大問2:60%, 大問3:75%', reflection: '時間配分がうまくいかなかった。長文の接続詞に注意。' },
-            { id: 2, uni: '早大・教育学部', subject: '国語', yearLabel: '2023', date: '', overallScore: '65%', daimonScores: '現代文:70%, 古文:60%', reflection: '古文単語の抜けを総復習する。' }
+        // 過去問管理データ
+        let pastExams = JSON.parse(localStorage.getItem('study_past_exams_v4')) || [
+            { id: 1, uni: '早大・社会科学部', subject: '英語', yearLabel: '2024', date: '', overallScore: '72%', daimonScores: '大問1:80%, 大問2:60%, 大問3:75%', reflection: '時間配分がうまくいかなかった。長文の論理展開に注意。' },
+            { id: 2, uni: '早大・教育学部', subject: '国語', yearLabel: '2023', date: '', overallScore: '65%', daimonScores: '現代文:70%, 古文:60%', reflection: '古文単語と文法の基礎抜けを総復習する。' },
+            { id: 3, uni: '早大・商学部', subject: '日本史', yearLabel: '2024', date: '', overallScore: '68%', daimonScores: '大問1:70%, 大問2:65%', reflection: '文化史の記述用語が曖昧だった。' }
         ];
 
         function savePastExams() {
-            localStorage.setItem('study_past_exams_v3', JSON.stringify(pastExams));
+            localStorage.setItem('study_past_exams_v4', JSON.stringify(pastExams));
             renderPastExams();
             renderChart();
             renderCalendar();
+            runAiAnalysis(); // 自動でAI分析も更新
         }
 
         function renderPastExams() {
             const container = document.getElementById('pastExamListContainer');
             container.innerHTML = '';
-
             if (pastExams.length === 0) {
                 container.innerHTML = '<p style="text-align:center; color:#666; font-size:0.9rem;">過去問の登録がまだありません。</p>';
                 return;
@@ -675,7 +590,7 @@
                         <th style="width: 25%;">大学・学部</th>
                         <th style="width: 15%;">科目</th>
                         <th style="width: 12%;">年度</th>
-                        <th style="width: 15%;">総合得点率</th>
+                        <th style="width: 15%;">得点率</th>
                         <th style="width: 18%;">日程</th>
                         <th style="width: 15%;">操作</th>
                     </tr>
@@ -683,13 +598,21 @@
                 <tbody id="pastExamTbody"></tbody>
             `;
             container.appendChild(table);
-
             const tbody = document.getElementById('pastExamTbody');
 
             pastExams.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="text" class="table-input" value="${item.uni}" onchange="updatePastExam(${index}, 'uni', this.value)"></td>
+                    <td>
+                        <select class="table-input" onchange="updatePastExam(${index}, 'uni', this.value)">
+                            <option value="早大・社会科学部" ${item.uni === '早大・社会科学部' ? 'selected' : ''}>早大・社会科学部</option>
+                            <option value="早大・教育学部" ${item.uni === '早大・教育学部' ? 'selected' : ''}>早大・教育学部</option>
+                            <option value="早大・文学部" ${item.uni === '早大・文学部' ? 'selected' : ''}>早大・文学部</option>
+                            <option value="早大・文化構想学部" ${item.uni === '早大・文化構想学部' ? 'selected' : ''}>早大・文化構想学部</option>
+                            <option value="早大・商学部" ${item.uni === '早大・商学部' ? 'selected' : ''}>早大・商学部</option>
+                            <option value="その他" ${item.uni === 'その他' ? 'selected' : ''}>その他</option>
+                        </select>
+                    </td>
                     <td>
                         <select class="table-input" onchange="updatePastExam(${index}, 'subject', this.value)">
                             <option value="英語" ${item.subject === '英語' ? 'selected' : ''}>英語</option>
@@ -707,7 +630,6 @@
                 `;
                 tbody.appendChild(tr);
 
-                // 詳細・反省点入力用の展開パネル行
                 const detailTr = document.createElement('tr');
                 detailTr.id = `detailPanel-${index}`;
                 detailTr.style.display = 'none';
@@ -716,9 +638,8 @@
                         <div class="exam-detail-panel">
                             <label>📌 大問ごとの得点率（例: 大問1: 80%, 大問2: 50% など）</label>
                             <input type="text" value="${item.daimonScores || ''}" placeholder="大問1: ○%, 大問2: ○%" onchange="updatePastExam(${index}, 'daimonScores', this.value)">
-                            
                             <label>💡 反省点・気づき・対策メモ</label>
-                            <textarea rows="3" placeholder="時間配分、ケアレスミス、知らなかった知識など..." onchange="updatePastExam(${index}, 'reflection', this.value)">${item.reflection || ''}</textarea>
+                            <textarea rows="3" placeholder="時間配分、ケアレスミス、知識の抜けなど..." onchange="updatePastExam(${index}, 'reflection', this.value)">${item.reflection || ''}</textarea>
                         </div>
                     </td>
                 `;
@@ -728,36 +649,16 @@
 
         function toggleDetailPanel(index) {
             const panel = document.getElementById(`detailPanel-${index}`);
-            if (panel.style.display === 'none') {
-                panel.style.display = 'table-row';
-            } else {
-                panel.style.display = 'none';
-            }
+            panel.style.display = panel.style.display === 'none' ? 'table-row' : 'none';
         }
 
         function addPastExam() {
-            const uni = document.getElementById('pqUni').value.trim();
+            const uni = document.getElementById('pqUni').value;
             const subject = document.getElementById('pqSubject').value;
             const yearLabel = document.getElementById('pqYearLabel').value.trim();
             const date = document.getElementById('pqDate').value;
 
-            if (!uni) {
-                alert('大学・学部名を入力してください');
-                return;
-            }
-
-            pastExams.push({
-                id: Date.now(),
-                uni,
-                subject,
-                yearLabel,
-                date,
-                overallScore: '',
-                daimonScores: '',
-                reflection: ''
-            });
-
-            document.getElementById('pqUni').value = '';
+            pastExams.push({ id: Date.now(), uni, subject, yearLabel, date, overallScore: '', daimonScores: '', reflection: '' });
             document.getElementById('pqYearLabel').value = '';
             document.getElementById('pqDate').value = '';
             savePastExams();
@@ -773,9 +674,98 @@
             savePastExams();
         }
 
-        // --- 過去問 棒グラフ機能（回数＝1年分としてカウント） ---
-        let currentChartFilter = 'すべて';
+        // --- AI自動分析・学部別傾向分析エンジン ---
+        function runAiAnalysis() {
+            const summaryContainer = document.getElementById('facultySummaryContainer');
+            const aiContainer = document.getElementById('aiReportContainer');
+            
+            if (pastExams.length === 0) {
+                summaryContainer.innerHTML = '<p style="font-size:0.9rem; color:#666;">過去問データがありません。</p>';
+                aiContainer.innerHTML = '';
+                return;
+            }
 
+            // 1. 学部ごとにデータをグループ化
+            let facultyMap = {};
+            pastExams.forEach(e => {
+                if (!facultyMap[e.uni]) facultyMap[e.uni] = [];
+                facultyMap[e.uni].push(e);
+            });
+
+            let facultyHtml = '<h3>📁 志望学部別 演習状況</h3>';
+            let totalScoreSum = 0;
+            let scoreCount = 0;
+            let reflectionsText = '';
+
+            for (let [uni, exams] of Object.entries(facultyMap)) {
+                let examDetails = '';
+                let uniScoreSum = 0;
+                let uniScoreCount = 0;
+
+                exams.forEach(ex => {
+                    let sNum = parseInt(ex.overallScore);
+                    if (!isNaN(sNum)) {
+                        uniScoreSum += sNum;
+                        uniScoreCount++;
+                        totalScoreSum += sNum;
+                        scoreCount++;
+                    }
+                    if (ex.reflection) reflectionsText += ` ${ex.reflection}`;
+                    examDetails += `<div style="font-size:0.85rem; margin-top:2px; color:#444;">・[${ex.subject}] ${ex.yearLabel || '年度不明'}: <b>得点率 ${ex.overallScore || '未入力'}</b> (${ex.reflection ? '反省あり' : '反省なし'})</div>`;
+                });
+
+                let avgUniScore = uniScoreCount > 0 ? Math.round(uniScoreSum / uniScoreCount) : '算出中';
+                facultyHtml += `
+                    <div class="faculty-summary-card">
+                        <b>📍 ${uni}</b> （実施数: ${exams.length}回 / 平均得点率: ${avgUniScore}${typeof avgUniScore === 'number' ? '%' : ''}）
+                        ${examDetails}
+                    </div>
+                `;
+            }
+            summaryContainer.innerHTML = facultyHtml;
+
+            // 2. AI判定・分析ロジック
+            let overallAvg = scoreCount > 0 ? Math.round(totalScoreSum / scoreCount) : 0;
+            
+            let growthJudgement = "データ蓄積中ですが、継続的な過去問演習により基礎から実践力への移行期にあります。";
+            if (overallAvg >= 75) {
+                growthJudgement = "🌟【順調・合格圏内到達レベル】全体平均得点率が75%を超えており、過去問の得点力・処理能力が非常に高く安定しています。この調子で弱点をゼロに潰していきましょう。";
+            } else if (overallAvg >= 60) {
+                growthJudgement = "📈【成長・得点力アップ期】平均得点率が60%台に乗っており、合格最低点ラインを視野に入れた戦いができています。大問ごとの失点原因を潰すことで一気に安定します。";
+            } else if (overallAvg > 0) {
+                growthJudgement = "🌱【基礎固め・伸び代大】現在はインプットとアウトプットの接続期間です。反省ノートにある課題を一つずつクリアすれば急激な伸びが期待できます。";
+            }
+
+            // 反省キーワード抽出によるAI補正アドバイス
+            let adviceAddition = "反省コメントから、時間配分や基礎知識（英単語・古文・漢字など）の定着に意識が向いています。引き続き、復習の回転数を上げてください。";
+            if (reflectionsText.includes("時間") || reflectionsText.includes("配分") || reflectionsText.includes("ペース")) {
+                adviceAddition = "⏰ **AI分析補正**: 反省点に「時間配分」に関する言及が多く見られます。解答の順番や、難しい大問を飛ばす勇気（スキップ戦術）を意識した時間シミュレーションを取り入れてみてください。";
+            } else if (reflectionsText.includes("単語") || reflectionsText.includes("基礎") || reflectionsText.includes("文法") || reflectionsText.includes("漢字")) {
+                adviceAddition = "📚 **AI分析補正**: 反省点に「基礎用語・単語・文法」の抜けが指摘されています。新しい過去問を解くよりも、直近で間違えた問題の解説と基礎インプットの復習を優先することで得点率が跳ね上がります。";
+            }
+
+            let aiReportHtml = `
+                <div class="ai-report-box">
+                    <div class="ai-report-title">🤖 AIパーソナル診断・成長度分析レポート</div>
+                    <div class="ai-section">
+                        <b>1. 総合成長度評価（平均得点率: ${overallAvg}%）</b><br>
+                        ${growthJudgement}
+                    </div>
+                    <div class="ai-section">
+                        <b>2. 学部別傾向と現在の位置づけ</b><br>
+                        早稲田の各学部（社会科学部、教育学部、文学部など）は、それぞれ「記述・思考力」「スピード勝負」「独自形式の読解」が求められます。学部ごとの得点率のバラつきを抑えるため、共通して失点している科目・大問がないかを確認しましょう。
+                    </div>
+                    <div class="ai-section">
+                        <b>3. 💡 今後の学習・分析補正アドバイス</b><br>
+                        ${adviceAddition}
+                    </div>
+                </div>
+            `;
+            aiContainer.innerHTML = aiReportHtml;
+        }
+
+        // グラフ機能
+        let currentChartFilter = 'すべて';
         function setChartFilter(filter) {
             currentChartFilter = filter;
             document.querySelectorAll('.filter-tab').forEach(tab => {
@@ -787,29 +777,22 @@
         function renderChart() {
             const container = document.getElementById('chartContainer');
             container.innerHTML = '';
-
-            let filtered = pastExams;
-            if (currentChartFilter !== 'すべて') {
-                filtered = pastExams.filter(e => e.subject === currentChartFilter);
-            }
+            let filtered = currentChartFilter === 'すべて' ? pastExams : pastExams.filter(e => e.subject === currentChartFilter);
 
             if (filtered.length === 0) {
                 container.innerHTML = '<p style="text-align:center; color:#666; font-size:0.9rem; margin:10px 0;">データがありません</p>';
                 return;
             }
 
-            // 大学・学部ごとにやった回数（年分）を集計する
             let uniCounts = {};
             filtered.forEach(e => {
                 let key = `${e.uni} (${e.subject})`;
                 uniCounts[key] = (uniCounts[key] || 0) + 1;
             });
-
             let maxCount = Math.max(...Object.values(uniCounts), 5);
 
             for (let [uniKey, count] of Object.entries(uniCounts)) {
                 let percent = Math.min(100, (count / maxCount) * 100);
-
                 const row = document.createElement('div');
                 row.className = 'chart-row';
                 row.innerHTML = `
@@ -827,6 +810,7 @@
         renderTasks();
         renderPastExams();
         renderChart();
+        runAiAnalysis();
     </script>
 </body>
 </html>
