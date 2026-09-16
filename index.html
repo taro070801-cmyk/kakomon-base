@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>早大過去問分析・演習管理システム</title>
+    <title>大学受験 過去問分析・演習管理システム</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
@@ -12,12 +12,12 @@
     <!-- ヘッダー -->
     <header class="bg-indigo-900 text-white shadow-md">
         <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold tracking-wider cursor-pointer" @click="currentView = 'home'; selectedFacultyId = null;">
-                早大過去問アナライザー
+            <h1 class="text-xl font-bold tracking-wider cursor-pointer" @click="goToHome()">
+                志望校 過去問アナライザー
             </h1>
             <div class="flex gap-2">
-                <button @click="openFacultyModal = true" class="bg-indigo-700 hover:bg-indigo-600 px-3 py-1.5 rounded text-sm font-medium transition">
-                    + 学部追加・編集
+                <button @click="openUnivModal = true" class="bg-indigo-700 hover:bg-indigo-600 px-3 py-1.5 rounded text-sm font-medium transition">
+                    + 大学を追加・編集
                 </button>
             </div>
         </div>
@@ -25,23 +25,59 @@
 
     <main class="max-w-6xl mx-auto px-4 py-8">
 
-        <!-- ==================== VIEW 1: ホーム（学部一覧） ==================== -->
+        <!-- ==================== VIEW 1: ホーム（大学一覧） ==================== -->
         <template x-if="currentView === 'home'">
             <div>
                 <div class="mb-8">
-                    <h2 class="text-2xl font-bold text-slate-900">学部別演習ダッシュボード</h2>
-                    <p class="text-slate-600 text-sm mt-1">志望学部の演習状況と蓄積データを確認できます。学部名をクリックして詳細へ進んでください。</p>
+                    <h2 class="text-2xl font-bold text-slate-900">大学別ダッシュボード</h2>
+                    <p class="text-slate-600 text-sm mt-1">早稲田・明治・法政・立教などの志望大学を選択して詳細を確認してください。</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <template x-for="faculty in faculties" :key="faculty.id">
+                    <template x-for="univ in universities" :key="univ.id">
+                        <div @click="selectUniv(univ.id)" class="bg-white rounded-xl shadow-sm hover:shadow-md transition border border-slate-200 p-6 cursor-pointer flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="text-xl font-bold text-slate-900" x-text="univ.name"></h3>
+                                    <span class="bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-full" x-text="calcUnivTotalExams(univ) + '年分演習'"></span>
+                                </div>
+                                <p class="text-xs text-slate-500 mb-4" x-text="'登録学部数: ' + univ.faculties.length + ' 学部'"></p>
+                            </div>
+                            <div class="border-t border-slate-100 pt-4 flex justify-between items-center text-sm">
+                                <span class="text-slate-500">全体平均得点率:</span>
+                                <span class="font-bold text-indigo-600" x-text="calcUnivAverage(univ) + '%'"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- ==================== VIEW 2: 大学詳細（学部一覧） ==================== -->
+        <template x-if="currentView === 'univ-detail'">
+            <div>
+                <div class="mb-6 flex justify-between items-center">
+                    <button @click="goToHome()" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center gap-1">
+                        &larr; 大学一覧に戻る
+                    </button>
+                    <button @click="openFacultyModal = true" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">
+                        + 学部を追加する
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
+                    <h2 class="text-3xl font-extrabold text-slate-900" x-text="currentUniv.name"></h2>
+                    <p class="text-xs text-slate-500 mt-1">学部ごとの演習状況を確認・管理します。</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <template x-for="faculty in currentUniv.faculties" :key="faculty.id">
                         <div @click="selectFaculty(faculty.id)" class="bg-white rounded-xl shadow-sm hover:shadow-md transition border border-slate-200 p-6 cursor-pointer flex flex-col justify-between">
                             <div>
                                 <div class="flex justify-between items-start mb-4">
                                     <h3 class="text-lg font-bold text-slate-900" x-text="faculty.name"></h3>
                                     <span class="bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-full" x-text="faculty.exams.length + '年分解いてる'"></span>
                                 </div>
-                                <p class="text-xs text-slate-500 mb-4" x-text="faculty.description || '早稲田大学 対策学部'"></p>
                             </div>
                             <div class="border-t border-slate-100 pt-4 flex justify-between items-center text-sm">
                                 <span class="text-slate-500">平均得点率:</span>
@@ -53,24 +89,24 @@
             </div>
         </template>
 
-        <!-- ==================== VIEW 2: 学部詳細（AI分析 ＆ 年度一覧） ==================== -->
+        <!-- ==================== VIEW 3: 学部詳細（AI分析 ＆ 年度・科目一覧） ==================== -->
         <template x-if="currentView === 'faculty-detail'">
           <div>
-              <!-- パンくず・戻る -->
+              <!-- パンくず -->
               <div class="mb-6 flex justify-between items-center">
-                  <button @click="currentView = 'home'; selectedFacultyId = null;" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center gap-1">
-                      &larr; 学部一覧に戻る
+                  <button @click="selectUniv(currentUniv.id)" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center gap-1">
+                      &larr; <span x-text="currentUniv.name + 'の学部一覧に戻る'"></span>
                   </button>
                   <button @click="openExamModalForAdd()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">
-                      + 年度・科目を追加する
+                      + 年度データを追加する
                   </button>
               </div>
 
-              <!-- 学部タイトル -->
+              <!-- 学部タイトルカード -->
               <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
                   <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <div>
-                          <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded">Target Faculty</span>
+                          <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded" x-text="currentUniv.name"></span>
                           <h2 class="text-3xl font-extrabold text-slate-900 mt-1" x-text="currentFaculty.name"></h2>
                       </div>
                       <div class="flex gap-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
@@ -86,19 +122,19 @@
                   </div>
               </div>
 
-              <!-- 冒頭：大問別 得意・苦手可視化マップ -->
+              <!-- 冒頭：科目・大問別 得意・苦手マップ -->
               <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
                   <h3 class="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
-                      <span>📊 大問別 得意・苦手マップ</span>
+                      <span>📊 科目・大問別 得意・苦手マップ</span>
                   </h3>
-                  <p class="text-xs text-slate-500 mb-4">蓄積されたデータから自動算出した、科目・大問ごとの得意・苦手傾向です。</p>
+                  <p class="text-xs text-slate-500 mb-4">蓄積されたデータから自動算出した、科目および大問ごとの得意・苦手傾向です。</p>
                   
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <template x-for="(subjectData, subjectName) in getSubjectDaimonStats(currentFaculty)" :key="subjectName">
+                      <template x-for="(subjectStats, subjectName) in getSubjectDaimonStats(currentFaculty)" :key="subjectName">
                           <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
                               <h4 class="font-bold text-slate-800 text-sm mb-3 border-b border-slate-200 pb-1" x-text="subjectName"></h4>
                               <div class="space-y-2">
-                                  <template x-for="(stat, daimonIndex) in subjectData" :key="daimonIndex">
+                                  <template x-for="(stat, daimonIndex) in subjectStats" :key="daimonIndex">
                                       <div class="flex justify-between items-center text-xs">
                                           <span class="text-slate-600" x-text="'大問 ' + (daimonIndex + 1)"></span>
                                           <div class="flex items-center gap-2">
@@ -130,7 +166,9 @@
 
               <!-- 年度一覧 -->
               <div class="space-y-4">
-                  <h3 class="text-xl font-bold text-slate-900">演習年度一覧</h3>
+                  <div class="flex justify-between items-center">
+                      <h3 class="text-xl font-bold text-slate-900">演習年度一覧</h3>
+                  </div>
                   <template x-for="exam in currentFaculty.exams" :key="exam.year">
                       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                           <!-- 年度ヘッダー（クリックで開閉） -->
@@ -143,25 +181,25 @@
                                   <button @click.stop="openExamModalForEdit(exam)" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded transition">
                                       編集
                                   </button>
-                                  <span class="text-slate-400 text-sm font-bold" x-text="expandedYear === exam.year ? '▲ 閉じる' : '▼ 英国日本史の詳細を見る'"></span>
+                                  <span class="text-slate-400 text-sm font-bold" x-text="expandedYear === exam.year ? '▲ 閉じる' : '▼ 各科目の詳細を見る'"></span>
                               </div>
                           </div>
 
-                          <!-- 英国日本史の詳細（クリックで展開） -->
+                          <!-- 科目詳細（クリックで展開） -->
                           <template x-if="expandedYear === exam.year">
                               <div class="p-6 border-t border-slate-200 space-y-6">
-                                  <template x-for="(subjectData, subjectName) in exam.subjects" :key="subjectName">
+                                  <template x-for="subject in exam.subjects" :key="subject.name">
                                       <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                                           <div class="flex justify-between items-center mb-3">
-                                              <h4 class="font-bold text-slate-900 text-base" x-text="subjectName"></h4>
-                                              <span class="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-1 rounded" x-text="'科目得点率: ' + subjectData.totalScorePct + '%'"></span>
+                                              <h4 class="font-bold text-slate-900 text-base" x-text="subject.name"></h4>
+                                              <span class="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-1 rounded" x-text="'科目得点率: ' + subject.totalScorePct + '%'"></span>
                                           </div>
 
                                           <!-- 大問構成と得点率 -->
                                           <div class="mb-3">
-                                              <div class="text-xs text-slate-500 mb-1" x-text="'大問構成: ' + subjectData.daimonCount + '問'"></div>
+                                              <div class="text-xs text-slate-500 mb-1" x-text="'大問構成: ' + subject.scores.length + '問'"></div>
                                               <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                                  <template x-for="(score, dIndex) in subjectData.scores" :key="dIndex">
+                                                  <template x-for="(score, dIndex) in subject.scores" :key="dIndex">
                                                       <div class="bg-white p-2 rounded border border-slate-200 text-center">
                                                           <div class="text-[10px] text-slate-400" x-text="'大問 ' + (dIndex + 1)"></div>
                                                           <div class="font-bold text-slate-800 text-sm" x-text="score + '%'"></div>
@@ -173,7 +211,7 @@
                                           <!-- 反省 -->
                                           <div class="bg-white p-3 rounded border border-slate-200">
                                               <span class="text-xs font-bold text-slate-500 block mb-1">反省・振り返り:</span>
-                                              <p class="text-xs text-slate-700 whitespace-pre-line" x-text="subjectData.reflection || '反省の記録なし'"></p>
+                                              <p class="text-xs text-slate-700 whitespace-pre-line" x-text="subject.reflection || '反省の記録なし'"></p>
                                           </div>
                                       </div>
                                   </template>
@@ -187,12 +225,35 @@
 
     </main>
 
-    <!-- ==================== モーダル: 学部追加・編集 ==================== -->
+    <!-- ==================== モーダル: 大学追加・編集 ==================== -->
+    <div x-show="openUnivModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" style="display: none;">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+            <h3 class="text-lg font-bold text-slate-900 mb-4">大学の管理</h3>
+            <div class="space-y-3 mb-6 max-h-48 overflow-y-auto">
+                <template x-for="univ in universities" :key="univ.id">
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded border border-slate-200">
+                        <span class="font-medium text-sm text-slate-800" x-text="univ.name"></span>
+                        <button @click="deleteUniv(univ.id)" class="text-rose-600 hover:text-rose-800 text-xs font-bold px-2 py-1 bg-rose-50 rounded">削除</button>
+                    </div>
+                </template>
+            </div>
+            <div class="border-t border-slate-200 pt-4">
+                <label class="block text-xs font-bold text-slate-700 mb-1">新しい大学名</label>
+                <input type="text" x-model="newUnivName" placeholder="例: 明治大学" class="w-full border border-slate-300 rounded px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <div class="flex justify-end gap-2">
+                    <button @click="openUnivModal = false" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-sm font-medium">閉じる</button>
+                    <button @click="addUniv()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium">追加する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== モーダル: 学部追加 ==================== -->
     <div x-show="openFacultyModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" style="display: none;">
         <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
-            <h3 class="text-lg font-bold text-slate-900 mb-4">学部グループの管理</h3>
-            <div class="space-y-3 mb-6">
-                <template x-for="faculty in faculties" :key="faculty.id">
+            <h3 class="text-lg font-bold text-slate-900 mb-4" x-text="currentUniv.name + ' の学部追加'"></h3>
+            <div class="space-y-3 mb-6 max-h-48 overflow-y-auto">
+                <template x-for="faculty in currentUniv.faculties" :key="faculty.id">
                     <div class="flex justify-between items-center bg-slate-50 p-3 rounded border border-slate-200">
                         <span class="font-medium text-sm text-slate-800" x-text="faculty.name"></span>
                         <button @click="deleteFaculty(faculty.id)" class="text-rose-600 hover:text-rose-800 text-xs font-bold px-2 py-1 bg-rose-50 rounded">削除</button>
@@ -201,7 +262,7 @@
             </div>
             <div class="border-t border-slate-200 pt-4">
                 <label class="block text-xs font-bold text-slate-700 mb-1">新しい学部名</label>
-                <input type="text" x-model="newFacultyName" placeholder="例: 商学部" class="w-full border border-slate-300 rounded px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="text" x-model="newFacultyName" placeholder="例: 文学部" class="w-full border border-slate-300 rounded px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <div class="flex justify-end gap-2">
                     <button @click="openFacultyModal = false" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-sm font-medium">閉じる</button>
                     <button @click="addFaculty()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium">追加する</button>
@@ -216,52 +277,66 @@
             <h3 class="text-lg font-bold text-slate-900 mb-4" x-text="isEditingExam ? '過去問データを編集' : '新しい過去問データを追加'"></h3>
             
             <div class="space-y-4 mb-6">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">年度 (西暦)</label>
-                    <input type="number" x-model.number="examForm.year" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" placeholder="2025">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">合計得点率 (%)</label>
-                    <input type="number" x-model.number="examForm.totalScorePct" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" placeholder="75">
-                </div>
-
-                <!-- 英国日本史の入力 -->
-                <template x-for="(subData, subName) in examForm.subjects" :key="subName">
-                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-slate-800 text-sm" x-text="subName"></span>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs text-slate-500">大問数:</span>
-                                <input type="number" x-model.number="subData.daimonCount" @change="updateDaimonArray(subName)" min="1" max="8" class="w-16 border border-slate-300 rounded px-2 py-1 text-xs text-center">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] text-slate-500 mb-1">大問ごとの得点率 (%) ※カンマ区切りまたは個別入力</label>
-                            <div class="grid grid-cols-4 gap-2">
-                                <template x-for="(score, idx) in subData.scores" :key="idx">
-                                    <div>
-                                        <span class="text-[10px] text-slate-400" x-text="'問' + (idx+1)"></span>
-                                        <input type="number" x-model.number="subData.scores[idx]" class="w-full border border-slate-300 rounded px-2 py-1 text-xs text-center">
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-between items-center pt-2">
-                            <span class="text-xs text-slate-500">科目得点率 (%)</span>
-                            <input type="number" x-model.number="subData.totalScorePct" class="w-20 border border-slate-300 rounded px-2 py-1 text-xs text-center font-bold">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-1">反省・振り返り</label>
-                            <textarea x-model="subData.reflection" rows="2" class="w-full border border-slate-300 rounded p-2 text-xs" placeholder="失点の原因や次への対策を記入..."></textarea>
-                        </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">年度 (西暦)</label>
+                        <input type="number" x-model.number="examForm.year" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" placeholder="2026">
                     </div>
-                </template>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">全体合計得点率 (%)</label>
+                        <input type="number" x-model.number="examForm.totalScorePct" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" placeholder="75">
+                    </div>
+                </div>
+
+                <!-- 科目ごとの編集エリア -->
+                <div class="border-t border-slate-200 pt-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-bold text-slate-800 text-sm">受験科目ごとの詳細</h4>
+                        <button @click="addSubjectToExam()" class="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold px-3 py-1.5 rounded transition">
+                            + 科目を追加
+                        </button>
+                    </div>
+
+                    <div class="space-y-4 max-h-96 overflow-y-auto pr-1">
+                        <template x-for="(sub, sIdx) in examForm.subjects" :key="sIdx">
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
+                                <div class="flex justify-between items-center gap-2">
+                                    <input type="text" x-model="sub.name" placeholder="科目名 (例: 英語)" class="border border-slate-300 rounded px-2 py-1 text-xs font-bold w-32">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-slate-500">大問数:</span>
+                                        <input type="number" x-model.number="sub.daimonCount" @change="updateDaimonCount(sub)" min="1" max="10" class="w-16 border border-slate-300 rounded px-2 py-1 text-xs text-center">
+                                        <button @click="removeSubjectFromExam(sIdx)" class="text-rose-600 hover:text-rose-800 text-xs font-bold px-2 py-1 bg-rose-50 rounded">削除</button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] text-slate-500 mb-1">大問ごとの得点率 (%)</label>
+                                    <div class="grid grid-cols-4 gap-2">
+                                        <template x-for="(score, idx) in sub.scores" :key="idx">
+                                            <div>
+                                                <span class="text-[10px] text-slate-400" x-text="'問' + (idx+1)"></span>
+                                                <input type="number" x-model.number="sub.scores[idx]" class="w-full border border-slate-300 rounded px-2 py-1 text-xs text-center">
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-between items-center pt-2">
+                                    <span class="text-xs text-slate-500">科目得点率 (%)</span>
+                                    <input type="number" x-model.number="sub.totalScorePct" class="w-20 border border-slate-300 rounded px-2 py-1 text-xs text-center font-bold">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">反省・振り返り</label>
+                                    <textarea x-model="sub.reflection" rows="2" class="w-full border border-slate-300 rounded p-2 text-xs" placeholder="失点の原因や次への対策を記入..."></textarea>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
             </div>
 
-            <div class="flex justify-end gap-2">
+            <div class="flex justify-end gap-2 pt-4 border-t border-slate-200">
                 <button @click="openExamModal = false" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-sm font-medium">キャンセル</button>
                 <button @click="saveExamData()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium">保存する</button>
             </div>
@@ -271,77 +346,98 @@
     <script>
         function appData() {
             return {
-                currentView: 'home', // 'home' or 'faculty-detail'
+                currentView: 'home', // 'home', 'univ-detail', 'faculty-detail'
+                selectedUnivId: null,
                 selectedFacultyId: null,
+
+                openUnivModal: false,
                 openFacultyModal: false,
                 openExamModal: false,
                 isEditingExam: false,
+
+                newUnivName: '',
                 newFacultyName: '',
                 expandedYear: null,
 
-                faculties: JSON.parse(localStorage.getItem('waseda_faculties_v2')) || [
+                universities: JSON.parse(localStorage.getItem('univ_exam_analyzer_v3')) || [
                     {
-                        id: 'soc',
-                        name: '社会科学部',
-                        description: '英語・国語・日本史',
-                        exams: [
+                        id: 'waseda',
+                        name: '早稲田大学',
+                        faculties: [
                             {
-                                year: 2025,
-                                totalScorePct: 74,
-                                subjects: {
-                                    '英語': { daimonCount: 5, scores: [80, 70, 65, 90, 75], totalScorePct: 76, reflection: '長文の空欄補充で失点。速読力と単語力の強化が必要。' },
-                                    '国語': { daimonCount: 3, scores: [70, 65, 75], totalScorePct: 70, reflection: '現代文の選択肢に迷いが生じた。消去法の精度を上げる。' },
-                                    '日本史': { daimonCount: 4, scores: [85, 75, 80, 70], totalScorePct: 78, reflection: '近代の経済史部分でケアレスミス。基本事項の確認を徹底。' }
-                                }
-                            },
-                            {
-                                year: 2024,
-                                totalScorePct: 70,
-                                subjects: {
-                                    '英語': { daimonCount: 5, scores: [75, 65, 60, 85, 70], totalScorePct: 71, reflection: '会話文問題で時間をかけすぎた。' },
-                                    '国語': { daimonCount: 3, scores: [65, 60, 70], totalScorePct: 65, reflection: '古文の単語・文法ミスが目立った。' },
-                                    '日本史': { daimonCount: 4, scores: [80, 85, 75, 75], totalScorePct: 79, reflection: '文化史対策が功を奏した。' }
-                                }
+                                id: 'waseda_soc',
+                                name: '社会科学部',
+                                exams: [
+                                    {
+                                        year: 2025,
+                                        totalScorePct: 74,
+                                        subjects: [
+                                            { name: '英語', daimonCount: 5, scores: [80, 70, 65, 90, 75], totalScorePct: 76, reflection: '長文の空欄補充で失点。速読力と単語力の強化が必要。' },
+                                            { name: '国語', daimonCount: 3, scores: [70, 65, 75], totalScorePct: 70, reflection: '現代文の選択肢に迷いが生じた。消去法の精度を上げる。' },
+                                            { name: '日本史', daimonCount: 4, scores: [85, 75, 80, 70], totalScorePct: 78, reflection: '近代の経済史部分でケアレスミス。基本事項の確認を徹底。' }
+                                        ]
+                                    }
+                                ]
                             }
                         ]
                     },
                     {
-                        id: 'edu',
-                        name: '教育学部',
-                        description: '英語・国語・日本史',
-                        exams: [
+                        id: 'meiji',
+                        name: '明治大学',
+                        faculties: [
                             {
-                                year: 2025,
-                                totalScorePct: 78,
-                                subjects: {
-                                    '英語': { daimonCount: 4, scores: [85, 80, 75, 70], totalScorePct: 78, reflection: '記述式問題の表現力をブラッシュアップする。' },
-                                    '国語': { daimonCount: 3, scores: [80, 75, 70], totalScorePct: 75, reflection: '漢字と現代文の記述で部分点を確実にとる。' },
-                                    '日本史': { daimonCount: 4, scores: [90, 85, 80, 80], totalScorePct: 84, reflection: 'リード文の読解がスムーズにできた。' }
-                                }
+                                id: 'meiji_kan',
+                                name: '文学部',
+                                exams: [
+                                    {
+                                        year: 2025,
+                                        totalScorePct: 80,
+                                        subjects: [
+                                            { name: '英語', daimonCount: 4, scores: [85, 80, 75, 80], totalScorePct: 80, reflection: 'アクセント問題で失点したが長文は安定。' },
+                                            { name: '国語', daimonCount: 3, scores: [80, 75, 85], totalScorePct: 80, reflection: '記述解答の文字数調整を意識できた。' }
+                                        ]
+                                    }
+                                ]
                             }
                         ]
                     },
-                    { id: 'lit', name: '文学部', description: '英語・国語・日本史', exams: [] },
-                    { id: 'cul', name: '文化構想学部', description: '英語・国語・日本史', exams: [] },
-                    { id: 'com', name: '商学部', description: '英語・国語・日本史', exams: [] }
+                    { id: 'hosei', name: '法政大学', faculties: [] },
+                    { id: 'rikkyo', name: '立教大学', faculties: [] }
                 ],
 
                 examForm: {
                     year: 2026,
-                    totalScorePct: 0,
-                    subjects: {
-                        '英語': { daimonCount: 4, scores: [0, 0, 0, 0], totalScorePct: 0, reflection: '' },
-                        '国語': { daimonCount: 3, scores: [0, 0, 0], totalScorePct: 0, reflection: '' },
-                        '日本史': { daimonCount: 4, scores: [0, 0, 0, 0], totalScorePct: 0, reflection: '' }
-                    }
+                    totalScorePct: 75,
+                    subjects: [
+                        { name: '英語', daimonCount: 4, scores: [70, 70, 70, 70], totalScorePct: 70, reflection: '' },
+                        { name: '国語', daimonCount: 3, scores: [70, 70, 70], totalScorePct: 70, reflection: '' },
+                        { name: '日本史', daimonCount: 4, scores: [70, 70, 70, 70], totalScorePct: 70, reflection: '' }
+                    ]
+                },
+
+                get currentUniv() {
+                    return this.universities.find(u => u.id === this.selectedUnivId) || { name: '', faculties: [] };
                 },
 
                 get currentFaculty() {
-                    return this.faculties.find(f => f.id === this.selectedFacultyId) || { exams: [] };
+                    const univ = this.currentUniv;
+                    return univ.faculties ? univ.faculties.find(f => f.id === this.selectedFacultyId) || { exams: [] } : { exams: [] };
                 },
 
-                selectFaculty(id) {
-                    this.selectedFacultyId = id;
+                goToHome() {
+                    this.currentView = 'home';
+                    this.selectedUnivId = null;
+                    this.selectedFacultyId = null;
+                },
+
+                selectUniv(univId) {
+                    this.selectedUnivId = univId;
+                    this.currentView = 'univ-detail';
+                    this.selectedFacultyId = null;
+                },
+
+                selectFaculty(facultyId) {
+                    this.selectedFacultyId = facultyId;
                     this.currentView = 'faculty-detail';
                     this.expandedYear = null;
                 },
@@ -350,19 +446,55 @@
                     this.expandedYear = this.expandedYear === year ? null : year;
                 },
 
+                calcUnivTotalExams(univ) {
+                    if (!univ.faculties) return 0;
+                    return univ.faculties.reduce((acc, f) => acc + f.exams.length, 0);
+                },
+
+                calcUnivAverage(univ) {
+                    if (!univ.faculties) return 0;
+                    let totalExams = 0;
+                    let sum = 0;
+                    univ.faculties.forEach(f => {
+                        f.exams.forEach(e => {
+                            sum += e.totalScorePct;
+                            totalExams++;
+                        });
+                    });
+                    return totalExams === 0 ? 0 : Math.round(sum / totalExams);
+                },
+
                 calcFacultyAverage(faculty) {
                     if (!faculty.exams || faculty.exams.length === 0) return 0;
                     const sum = faculty.exams.reduce((acc, cur) => acc + cur.totalScorePct, 0);
                     return Math.round(sum / faculty.exams.length);
                 },
 
+                addUniv() {
+                    if (!this.newUnivName.trim()) return;
+                    const newId = 'univ_' + Date.now();
+                    this.universities.push({
+                        id: newId,
+                        name: this.newUnivName.trim(),
+                        faculties: []
+                    });
+                    this.newUnivName = '';
+                    this.saveData();
+                },
+
+                deleteUniv(id) {
+                    if (confirm('この大学データを削除してもよろしいですか？')) {
+                        this.universities = this.universities.filter(u => u.id !== id);
+                        this.saveData();
+                    }
+                },
+
                 addFaculty() {
                     if (!this.newFacultyName.trim()) return;
                     const newId = 'fac_' + Date.now();
-                    this.faculties.push({
+                    this.currentUniv.faculties.push({
                         id: newId,
                         name: this.newFacultyName.trim(),
-                        description: '英語・国語・日本史',
                         exams: []
                     });
                     this.newFacultyName = '';
@@ -371,7 +503,7 @@
 
                 deleteFaculty(id) {
                     if (confirm('この学部グループを削除してもよろしいですか？')) {
-                        this.faculties = this.faculties.filter(f => f.id !== id);
+                        this.currentUniv.faculties = this.currentUniv.faculties.filter(f => f.id !== id);
                         this.saveData();
                     }
                 },
@@ -381,29 +513,42 @@
                     this.examForm = {
                         year: 2026,
                         totalScorePct: 75,
-                        subjects: {
-                            '英語': { daimonCount: 5, scores: [70, 70, 70, 70, 70], totalScorePct: 70, reflection: '' },
-                            '国語': { daimonCount: 3, scores: [70, 70, 70], totalScorePct: 70, reflection: '' },
-                            '日本史': { daimonCount: 4, scores: [70, 70, 70, 70], totalScorePct: 70, reflection: '' }
-                        }
+                        subjects: [
+                            { name: '英語', daimonCount: 4, scores: [70, 70, 70, 70], totalScorePct: 70, reflection: '' },
+                            { name: '国語', daimonCount: 3, scores: [70, 70, 70], totalScorePct: 70, reflection: '' },
+                            { name: '日本史', daimonCount: 4, scores: [70, 70, 70, 70], totalScorePct: 70, reflection: '' }
+                        ]
                     };
                     this.openExamModal = true;
                 },
 
                 openExamModalForEdit(exam) {
                     this.isEditingExam = true;
-                    // ディープコピーしてフォームにセット
                     this.examForm = JSON.parse(JSON.stringify(exam));
                     this.openExamModal = true;
                 },
 
-                updateDaimonArray(subName) {
-                    const count = parseInt(this.examForm.subjects[subName].daimonCount) || 1;
-                    const currentScores = this.examForm.subjects[subName].scores;
-                    if (currentScores.length < count) {
-                        while (currentScores.length < count) currentScores.push(70);
+                addSubjectToExam() {
+                    this.examForm.subjects.push({
+                        name: '新しい科目',
+                        daimonCount: 3,
+                        scores: [70, 70, 70],
+                        totalScorePct: 70,
+                        reflection: ''
+                    });
+                },
+
+                removeSubjectFromExam(index) {
+                    this.examForm.subjects.splice(index, 1);
+                },
+
+                updateDaimonCount(sub) {
+                    const count = parseInt(sub.daimonCount) || 1;
+                    sub.daimonCount = count;
+                    if (sub.scores.length < count) {
+                        while (sub.scores.length < count) sub.scores.push(70);
                     } else {
-                        this.examForm.subjects[subName].scores = currentScores.slice(0, count);
+                        sub.scores = sub.scores.slice(0, count);
                     }
                 },
 
@@ -415,13 +560,11 @@
                             faculty.exams[index] = JSON.parse(JSON.stringify(this.examForm));
                         }
                     } else {
-                        // 重複チェック
                         if (faculty.exams.some(e => e.year === this.examForm.year)) {
                             alert('指定した年度のデータは既に存在します。');
                             return;
                         }
                         faculty.exams.push(JSON.parse(JSON.stringify(this.examForm)));
-                        // 年度降順にソート
                         faculty.exams.sort((a, b) => b.year - a.year);
                     }
                     this.saveData();
@@ -429,42 +572,46 @@
                 },
 
                 saveData() {
-                    localStorage.setItem('waseda_faculties_v2', JSON.stringify(this.faculties));
+                    localStorage.setItem('univ_exam_analyzer_v3', JSON.stringify(this.universities));
                 },
 
-                // 大問ごとの平均得点率を算出し、得意・苦手マップ用のデータを構築する
+                // 科目・大問別の平均得点率を算出し、マップ用データを構築
                 getSubjectDaimonStats(faculty) {
                     let stats = {};
-                    const subjects = ['英語', '国語', '日本史'];
-                    
-                    subjects.forEach(sub => {
-                        let daimonSums = {};
-                        let daimonCounts = {};
+                    if (!faculty.exams) return stats;
 
-                        faculty.exams.forEach(exam => {
-                            if (exam.subjects && exam.subjects[sub] && exam.subjects[sub].scores) {
-                                exam.subjects[sub].scores.forEach((score, idx) => {
-                                    if (!daimonSums[idx]) { daimonSums[idx] = 0; daimonCounts[idx] = 0; }
-                                    daimonSums[idx] += Number(score);
-                                    daimonCounts[idx] += 1;
+                    faculty.exams.forEach(exam => {
+                        if (exam.subjects) {
+                            exam.subjects.forEach(sub => {
+                                if (!stats[sub.name]) {
+                                    stats[sub.name] = { sums: [], counts: [] };
+                                }
+                                sub.scores.forEach((score, idx) => {
+                                    if (!stats[sub.name].sums[idx]) {
+                                        stats[sub.name].sums[idx] = 0;
+                                        stats[sub.name].counts[idx] = 0;
+                                    }
+                                    stats[sub.name].sums[idx] += Number(score);
+                                    stats[sub.name].counts[idx] += 1;
                                 });
-                            }
-                        });
+                            });
+                        }
+                    });
 
+                    let formattedStats = {};
+                    Object.keys(stats).forEach(subName => {
                         let subStats = [];
-                        let maxLen = Math.max(...Object.keys(daimonCounts).map(k => Number(k) + 1), 0);
-                        if (maxLen === 0) maxLen = (sub === '英語' ? 5 : (sub === '国語' ? 3 : 4));
-
-                        for (let i = 0; i < maxLen; i++) {
-                            let avg = daimonCounts[i] ? Math.round(daimonSums[i] / daimonCounts[i]) : 70;
+                        let len = stats[subName].counts.length;
+                        for (let i = 0; i < len; i++) {
+                            let avg = Math.round(stats[subName].sums[i] / stats[subName].counts[i]);
                             subStats.push({ avg: avg });
                         }
-                        stats[sub] = subStats;
+                        formattedStats[subName] = subStats;
                     });
-                    return stats;
+                    return formattedStats;
                 },
 
-                // 蓄積データを元にしたAI客観分析の生成
+                // AI客観分析
                 generateAIAnalysis(faculty) {
                     if (!faculty.exams || faculty.exams.length === 0) {
                         return 'まだ過去問データが登録されていません。データを登録すると、AIによる客観的な弱点分析や傾向アドバイスが表示されます。';
@@ -473,11 +620,11 @@
                     let analysis = `これまでに蓄積された${faculty.exams.length}年分の演習データ（平均得点率 ${avg}%）を総合的に分析しました。\n\n`;
                     
                     if (avg >= 75) {
-                        analysis += '合格ラインを安定して超える高い得点力を維持できています。特に苦手な大問の失点を最小限に抑えられており、本番を見据えた時間配分と記述・論述の精度磨きに注力してください。';
+                        analysis += '合格ラインを安定して超える高い得点力を維持できています。科目ごとの弱点大問の失点をさらに削り、本番の時間配分と記述精度の向上に注力してください。';
                     } else if (avg >= 65) {
-                        analysis += '合格ボーダーライン付近で推移しています。各科目の特定の「大問」における波を無くすことが最優先課題です。反省ノートを見直し、失点パターンの共通項を洗い出しましょう。';
+                        analysis += '合格ボーダーライン付近で推移しています。各科目の特定の「大問」や失点パターンに偏りがないか確認し、反省ノートを活かした復習を徹底しましょう。';
                     } else {
-                        analysis += '基礎知識の定着と、出題形式への慣れに伸びしろがあります。まずは各科目における基礎的な大問で確実に得点できるよう、過去問の徹底的な復習と周辺知識のインプットを強化してください。';
+                        analysis += '基礎知識の定着と出題形式へのアプローチに伸びしろがあります。各科目における基礎的な大問で確実に得点できるよう、個別科目の徹底的な復習を優先してください。';
                     }
                     return analysis;
                 }
