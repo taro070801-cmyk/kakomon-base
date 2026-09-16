@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>受験勉強タスク＆過去問管理アプリ</title>
+    <title>受験勉強タスク＆過去問・反省管理アプリ</title>
     <style>
         body {
             font-family: sans-serif;
-            max-width: 700px;
+            max-width: 750px;
             margin: 20px auto;
             padding: 20px;
             background-color: #f4f6f9;
@@ -42,11 +42,12 @@
             margin-bottom: 15px;
             flex-wrap: wrap;
         }
-        input, select, button {
+        input, select, textarea, button {
             padding: 8px;
             font-size: 1rem;
+            box-sizing: border-box;
         }
-        input[type="text"], input[type="date"], input[type="number"] {
+        input[type="text"], input[type="date"], select {
             flex: 1;
             min-width: 110px;
         }
@@ -99,10 +100,11 @@
             background: none;
             border: 1px solid #ccc;
             color: #333;
-            padding: 2px 6px;
+            padding: 3px 8px;
             border-radius: 4px;
             margin-left: 2px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            cursor: pointer;
         }
         .actions button:hover, .small-btn:hover {
             background: #eee;
@@ -158,7 +160,7 @@
             background: #f9f9f9;
             border: 1px solid #ddd;
             border-radius: 4px;
-            min-height: 55px;
+            min-height: 60px;
             padding: 4px;
             font-size: 0.8rem;
             cursor: pointer;
@@ -181,13 +183,13 @@
             font-weight: bold;
         }
         .day-rate {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: bold;
             color: #2e7d32;
             text-align: right;
         }
         .has-exam {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             background: #e1f5fe;
             color: #01579b;
             padding: 1px 3px;
@@ -224,9 +226,34 @@
             background-color: #f1f3f5;
         }
         .table-input {
-            width: 90%;
+            width: 95%;
             padding: 4px;
             box-sizing: border-box;
+        }
+
+        /* 過去問詳細・反省点パネル */
+        .exam-detail-panel {
+            background: #fdfdfd;
+            border: 1px dashed #ccc;
+            padding: 12px;
+            margin-top: 6px;
+            border-radius: 6px;
+            text-align: left;
+        }
+        .exam-detail-panel label {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #555;
+            display: block;
+            margin-top: 6px;
+        }
+        .exam-detail-panel textarea, .exam-detail-panel input {
+            width: 100%;
+            margin-top: 2px;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.9rem;
         }
 
         /* 棒グラフエリア */
@@ -295,7 +322,7 @@
 </head>
 <body>
 
-    <h1>受験勉強タスク＆過去問管理</h1>
+    <h1>受験勉強タスク＆過去問・反省管理</h1>
     <div class="date-display" id="currentDateDisplay"></div>
 
     <!-- 今日の完遂率セクション -->
@@ -353,33 +380,24 @@
         </div>
     </div>
 
-    <!-- 過去問スケジュール・演習管理セクション -->
+    <!-- 過去問演習・反省管理セクション -->
     <div class="section">
-        <h2>過去問スケジュール・演習管理</h2>
+        <h2>過去問演習・得点率・反省ノート</h2>
+        <p style="font-size:0.85rem; color:#666; margin-top:0;">各大学学部の過去問について、得点率や大問別正答率、反省点を記録できます。</p>
+        
         <div class="input-group" style="margin-bottom: 10px;">
-            <input type="text" id="pqUni" placeholder="大学・学部名（例: 早大・社会科学部）" style="flex:2;">
+            <input type="text" id="pqUni" placeholder="大学・学部 (例:早大・社学)" style="flex:2;">
             <select id="pqSubject" style="flex:1;">
                 <option value="英語">英語</option>
                 <option value="国語">国語</option>
                 <option value="日本史">日本史</option>
             </select>
-            <input type="number" id="pqYears" placeholder="年数(例:3)" min="0" max="30" style="flex:1;" value="1">
+            <input type="text" id="pqYearLabel" placeholder="年度 (例:2024)" style="flex:1;">
             <input type="date" id="pqDate" style="flex:1.5;">
             <button onclick="addPastExam()">追加</button>
         </div>
 
-        <table id="pastExamTable">
-            <thead>
-                <tr>
-                    <th style="width: 30%;">大学・学部</th>
-                    <th style="width: 20%;">科目</th>
-                    <th style="width: 15%;">年数</th>
-                    <th style="width: 22%;">予定日程</th>
-                    <th style="width: 13%;">操作</th>
-                </tr>
-            </thead>
-            <tbody id="pastExamTbody"></tbody>
-        </table>
+        <div id="pastExamListContainer"></div>
     </div>
 
     <!-- 過去問進捗 棒グラフセクション -->
@@ -407,7 +425,7 @@
         document.getElementById('currentDateDisplay').innerText = dateObj.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 
         // --- タスク履歴データ ---
-        let historyData = JSON.parse(localStorage.getItem('study_history_v5')) || {};
+        let historyData = JSON.parse(localStorage.getItem('study_history_v6')) || {};
 
         if (!historyData[todayKey]) {
             const keys = Object.keys(historyData).sort();
@@ -424,7 +442,7 @@
         }
 
         function saveHistory() {
-            localStorage.setItem('study_history_v5', JSON.stringify(historyData));
+            localStorage.setItem('study_history_v6', JSON.stringify(historyData));
         }
 
         let currentTasks = historyData[todayKey];
@@ -514,7 +532,7 @@
 
         // --- 1ヶ月カレンダー機能 ---
         let calendarYear = dateObj.getFullYear();
-        let calendarMonth = dateObj.getMonth(); // 0-11
+        let calendarMonth = dateObj.getMonth();
 
         function changeMonth(direction) {
             calendarMonth += direction;
@@ -534,7 +552,6 @@
             grid.innerHTML = '';
             title.innerText = `${calendarYear}年 ${calendarMonth + 1}月`;
 
-            // 曜日のヘッダー
             const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
             weekdays.forEach(w => {
                 const div = document.createElement('div');
@@ -546,14 +563,12 @@
             const firstDayIndex = new Date(calendarYear, calendarMonth, 1).getDay();
             const totalDays = new Date(calendarYear, calendarMonth + 1, 0).getDate();
 
-            // 前月の空白セル
             for (let i = 0; i < firstDayIndex; i++) {
                 const div = document.createElement('div');
                 div.className = 'calendar-day empty';
                 grid.appendChild(div);
             }
 
-            // 日付セル
             for (let day = 1; day <= totalDays; day++) {
                 const mStr = String(calendarMonth + 1).padStart(2, '0');
                 const dStr = String(day).padStart(2, '0');
@@ -568,7 +583,6 @@
                     dayRateStr = '0%';
                 }
 
-                // この日の過去問予定を検索
                 const matchedExams = pastExams.filter(e => e.date === dateKey);
 
                 const div = document.createElement('div');
@@ -598,9 +612,8 @@
             detailContent.innerHTML = '';
 
             detailBox.style.display = 'block';
-            detailTitle.innerText = `【 ${dateKey} の詳細スケジュール 】`;
+            detailTitle.innerText = `【 ${dateKey} の詳細スケジュール・反省ノート 】`;
 
-            // タスク表示
             const tasks = historyData[dateKey];
             let taskHtml = '<strong>【勉強タスク】</strong>';
             if (!tasks || tasks.length === 0) {
@@ -613,38 +626,65 @@
                 taskHtml += '</ul>';
             }
 
-            // 過去問予定表示
             const exams = pastExams.filter(e => e.date === dateKey);
-            let examHtml = '<strong>【過去問の予定】</strong>';
+            let examHtml = '<strong>【過去問実施・反省】</strong>';
             if (exams.length === 0) {
-                examHtml += '<p style="margin:4px 0 0 0; font-size:0.85rem; color:#666;">この日に予定されている過去問はありません。</p>';
+                examHtml += '<p style="margin:4px 0 0 0; font-size:0.85rem; color:#666;">この日に予定・実施した過去問はありません。</p>';
             } else {
-                examHtml += '<ul style="margin:4px 0 0 0; padding-left:15px; font-size:0.85rem;">';
+                examHtml += '<div style="margin-top:4px; font-size:0.85rem;">';
                 exams.forEach(e => {
-                    examHtml += `<li><b>${e.uni}</b> （科目: ${e.subject} / ${e.years}年分）</li>`;
+                    examHtml += `<div style="background:#fff; padding:6px; margin-bottom:4px; border:1px solid #ddd; border-radius:4px;">
+                        <b>${e.uni} (${e.subject})</b> [年度: ${e.yearLabel || '未設定'}]<br>
+                        総合得点率: <b>${e.overallScore || '未入力'}</b><br>
+                        大問別得点: ${e.daimonScores || '未入力'}<br>
+                        反省点: <span style="color:#c62828;">${e.reflection || 'なし'}</span>
+                    </div>`;
                 });
-                examHtml += '</ul>';
+                examHtml += '</div>';
             }
 
             detailContent.innerHTML = taskHtml + examHtml;
         }
 
-        // --- 過去問管理機能 ---
-        let pastExams = JSON.parse(localStorage.getItem('study_past_exams_v2')) || [
-            { id: 1, uni: '早大・社会科学部', subject: '英語', years: 3, date: '' },
-            { id: 2, uni: '早大・教育学部', subject: '国語', years: 2, date: '' }
+        // --- 過去問演習・反省ノート機能 ---
+        let pastExams = JSON.parse(localStorage.getItem('study_past_exams_v3')) || [
+            { id: 1, uni: '早大・社会科学部', subject: '英語', yearLabel: '2024', date: '', overallScore: '72%', daimonScores: '大問1:80%, 大問2:60%, 大問3:75%', reflection: '時間配分がうまくいかなかった。長文の接続詞に注意。' },
+            { id: 2, uni: '早大・教育学部', subject: '国語', yearLabel: '2023', date: '', overallScore: '65%', daimonScores: '現代文:70%, 古文:60%', reflection: '古文単語の抜けを総復習する。' }
         ];
 
         function savePastExams() {
-            localStorage.setItem('study_past_exams_v2', JSON.stringify(pastExams));
+            localStorage.setItem('study_past_exams_v3', JSON.stringify(pastExams));
             renderPastExams();
             renderChart();
             renderCalendar();
         }
 
         function renderPastExams() {
+            const container = document.getElementById('pastExamListContainer');
+            container.innerHTML = '';
+
+            if (pastExams.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#666; font-size:0.9rem;">過去問の登録がまだありません。</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">大学・学部</th>
+                        <th style="width: 15%;">科目</th>
+                        <th style="width: 12%;">年度</th>
+                        <th style="width: 15%;">総合得点率</th>
+                        <th style="width: 18%;">日程</th>
+                        <th style="width: 15%;">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="pastExamTbody"></tbody>
+            `;
+            container.appendChild(table);
+
             const tbody = document.getElementById('pastExamTbody');
-            tbody.innerHTML = '';
 
             pastExams.forEach((item, index) => {
                 const tr = document.createElement('tr');
@@ -657,18 +697,48 @@
                             <option value="日本史" ${item.subject === '日本史' ? 'selected' : ''}>日本史</option>
                         </select>
                     </td>
-                    <td><input type="number" class="table-input" value="${item.years}" min="0" max="30" onchange="updatePastExam(${index}, 'years', Number(this.value))"></td>
-                    <td><input type="date" class="table-input" value="${item.date}" onchange="updatePastExam(${index}, 'date', this.value)"></td>
-                    <td><button class="small-btn" onclick="deletePastExam(${index})">削除</button></td>
+                    <td><input type="text" class="table-input" value="${item.yearLabel || ''}" placeholder="2024" onchange="updatePastExam(${index}, 'yearLabel', this.value)"></td>
+                    <td><input type="text" class="table-input" value="${item.overallScore || ''}" placeholder="75%" onchange="updatePastExam(${index}, 'overallScore', this.value)"></td>
+                    <td><input type="date" class="table-input" value="${item.date || ''}" onchange="updatePastExam(${index}, 'date', this.value)"></td>
+                    <td>
+                        <button class="small-btn" onclick="toggleDetailPanel(${index})">📝反省</button>
+                        <button class="small-btn" onclick="deletePastExam(${index})" style="color:#d9534f;">削除</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
+
+                // 詳細・反省点入力用の展開パネル行
+                const detailTr = document.createElement('tr');
+                detailTr.id = `detailPanel-${index}`;
+                detailTr.style.display = 'none';
+                detailTr.innerHTML = `
+                    <td colspan="6" style="background:#fcfcfc; text-align:left; padding:10px;">
+                        <div class="exam-detail-panel">
+                            <label>📌 大問ごとの得点率（例: 大問1: 80%, 大問2: 50% など）</label>
+                            <input type="text" value="${item.daimonScores || ''}" placeholder="大問1: ○%, 大問2: ○%" onchange="updatePastExam(${index}, 'daimonScores', this.value)">
+                            
+                            <label>💡 反省点・気づき・対策メモ</label>
+                            <textarea rows="3" placeholder="時間配分、ケアレスミス、知らなかった知識など..." onchange="updatePastExam(${index}, 'reflection', this.value)">${item.reflection || ''}</textarea>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(detailTr);
             });
+        }
+
+        function toggleDetailPanel(index) {
+            const panel = document.getElementById(`detailPanel-${index}`);
+            if (panel.style.display === 'none') {
+                panel.style.display = 'table-row';
+            } else {
+                panel.style.display = 'none';
+            }
         }
 
         function addPastExam() {
             const uni = document.getElementById('pqUni').value.trim();
             const subject = document.getElementById('pqSubject').value;
-            const years = Number(document.getElementById('pqYears').value) || 1;
+            const yearLabel = document.getElementById('pqYearLabel').value.trim();
             const date = document.getElementById('pqDate').value;
 
             if (!uni) {
@@ -676,9 +746,19 @@
                 return;
             }
 
-            pastExams.push({ id: Date.now(), uni, subject, years, date });
+            pastExams.push({
+                id: Date.now(),
+                uni,
+                subject,
+                yearLabel,
+                date,
+                overallScore: '',
+                daimonScores: '',
+                reflection: ''
+            });
+
             document.getElementById('pqUni').value = '';
-            document.getElementById('pqYears').value = '1';
+            document.getElementById('pqYearLabel').value = '';
             document.getElementById('pqDate').value = '';
             savePastExams();
         }
@@ -693,7 +773,7 @@
             savePastExams();
         }
 
-        // --- 過去問 棒グラフ機能 ---
+        // --- 過去問 棒グラフ機能（回数＝1年分としてカウント） ---
         let currentChartFilter = 'すべて';
 
         function setChartFilter(filter) {
@@ -708,7 +788,6 @@
             const container = document.getElementById('chartContainer');
             container.innerHTML = '';
 
-            // フィルターに応じたデータ抽出
             let filtered = pastExams;
             if (currentChartFilter !== 'すべて') {
                 filtered = pastExams.filter(e => e.subject === currentChartFilter);
@@ -719,23 +798,29 @@
                 return;
             }
 
-            // 最大年数を見つけてバーの長さをパーセンテージ化する（最大値が少なくとも5年分くらいになるようにする）
-            let maxYears = Math.max(...filtered.map(e => e.years), 5);
-
+            // 大学・学部ごとにやった回数（年分）を集計する
+            let uniCounts = {};
             filtered.forEach(e => {
-                let percent = Math.min(100, (e.years / maxYears) * 100);
+                let key = `${e.uni} (${e.subject})`;
+                uniCounts[key] = (uniCounts[key] || 0) + 1;
+            });
+
+            let maxCount = Math.max(...Object.values(uniCounts), 5);
+
+            for (let [uniKey, count] of Object.entries(uniCounts)) {
+                let percent = Math.min(100, (count / maxCount) * 100);
 
                 const row = document.createElement('div');
                 row.className = 'chart-row';
                 row.innerHTML = `
-                    <div class="chart-label" title="${e.uni} (${e.subject})">${e.uni} <span style="font-size:0.75rem; color:#666;">[${e.subject}]</span></div>
+                    <div class="chart-label" title="${uniKey}">${uniKey}</div>
                     <div class="chart-bar-wrapper">
                         <div class="chart-bar" style="width: ${percent}%;"></div>
-                        <div class="chart-value">${e.years} 年分</div>
+                        <div class="chart-value">${count} 年分</div>
                     </div>
                 `;
                 container.appendChild(row);
-            });
+            }
         }
 
         // 初期実行
