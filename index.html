@@ -6,7 +6,7 @@
     <style>
         body {
             font-family: sans-serif;
-            max-width: 650px;
+            max-width: 700px;
             margin: 20px auto;
             padding: 20px;
             background-color: #f4f6f9;
@@ -46,9 +46,9 @@
             padding: 8px;
             font-size: 1rem;
         }
-        input[type="text"], input[type="date"] {
+        input[type="text"], input[type="date"], input[type="number"] {
             flex: 1;
-            min-width: 130px;
+            min-width: 110px;
         }
         button {
             cursor: pointer;
@@ -135,25 +135,45 @@
             line-height: 20px;
         }
 
-        /* 1週間カレンダーグリッド */
+        /* 1ヶ月カレンダー */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            margin-top: 10px;
+            gap: 4px;
+        }
+        .calendar-weekday {
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: #666;
+            padding-bottom: 4px;
         }
         .calendar-day {
             background: #f9f9f9;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 6px 2px;
-            text-align: center;
+            border-radius: 4px;
+            min-height: 55px;
+            padding: 4px;
             font-size: 0.8rem;
             cursor: pointer;
             transition: background 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
         .calendar-day:hover {
             background: #eaeaea;
+        }
+        .calendar-day.empty {
+            background: transparent;
+            border: none;
+            cursor: default;
         }
         .calendar-day.today {
             border-color: #4a90e2;
@@ -161,19 +181,30 @@
             font-weight: bold;
         }
         .day-rate {
-            font-size: 1rem;
+            font-size: 0.85rem;
             font-weight: bold;
-            margin-top: 4px;
             color: #2e7d32;
+            text-align: right;
+        }
+        .has-exam {
+            font-size: 0.7rem;
+            background: #e1f5fe;
+            color: #01579b;
+            padding: 1px 3px;
+            border-radius: 3px;
+            margin-top: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        /* 日付詳細モーダル / エリア */
+        /* 詳細モーダル/エリア */
         .detail-box {
             background: #fff8e1;
             border: 1px solid #ffe082;
             padding: 12px;
             border-radius: 6px;
-            margin-top: 10px;
+            margin-top: 15px;
             display: none;
         }
 
@@ -198,10 +229,67 @@
             box-sizing: border-box;
         }
 
-        @media(max-width: 600px) {
-            .calendar-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
+        /* 棒グラフエリア */
+        .filter-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .filter-tab {
+            padding: 5px 12px;
+            background: #eee;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        .filter-tab.active {
+            background: #4a90e2;
+            color: white;
+            font-weight: bold;
+        }
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .chart-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        .chart-label {
+            width: 160px;
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chart-bar-wrapper {
+            flex: 1;
+            background: #eee;
+            border-radius: 4px;
+            height: 22px;
+            position: relative;
+            overflow: hidden;
+        }
+        .chart-bar {
+            background-color: #ff9800;
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        .chart-value {
+            position: absolute;
+            right: 8px;
+            top: 0;
+            line-height: 22px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #333;
         }
     </style>
 </head>
@@ -249,45 +337,64 @@
         <ul id="afternoonList"></ul>
     </div>
 
-    <!-- 過去1週間の履歴（データ詳細確認つき） -->
+    <!-- 1ヶ月カレンダーセクション -->
     <div class="section">
-        <h2>過去1週間の履歴（クリックして詳細表示）</h2>
+        <h2>1ヶ月カレンダー（クリックして詳細確認）</h2>
+        <div class="calendar-header">
+            <button onclick="changeMonth(-1)">◀ 前月</button>
+            <h3 id="calendarMonthTitle" style="margin:0; font-size:1.1rem;">2026年9月</h3>
+            <button onclick="changeMonth(1)">次月 ▶</button>
+        </div>
         <div class="calendar-grid" id="calendarGrid"></div>
+        
         <div class="detail-box" id="dayDetailBox">
             <h3 id="detailTitle" style="margin-top:0; font-size:1rem;">日付の詳細</h3>
-            <ul id="detailList" style="margin-bottom:0;"></ul>
+            <div id="detailContent"></div>
         </div>
     </div>
 
     <!-- 過去問スケジュール・演習管理セクション -->
     <div class="section">
         <h2>過去問スケジュール・演習管理</h2>
-        <p style="font-size:0.85rem; color:#666; margin-top:0;">各大学学部の予定日程と、何年分やったかを管理・編集できます。</p>
-        
         <div class="input-group" style="margin-bottom: 10px;">
-            <input type="text" id="pqUni" placeholder="大学・学部名（例: 早大・社会科学部）">
-            <input type="text" id="pqYears" placeholder="やった年数（例: 3年分 / 2021-2023）" style="flex:1;">
-            <input type="date" id="pqDate">
+            <input type="text" id="pqUni" placeholder="大学・学部名（例: 早大・社会科学部）" style="flex:2;">
+            <select id="pqSubject" style="flex:1;">
+                <option value="英語">英語</option>
+                <option value="国語">国語</option>
+                <option value="日本史">日本史</option>
+            </select>
+            <input type="number" id="pqYears" placeholder="年数(例:3)" min="0" max="30" style="flex:1;" value="1">
+            <input type="date" id="pqDate" style="flex:1.5;">
             <button onclick="addPastExam()">追加</button>
         </div>
 
         <table id="pastExamTable">
             <thead>
                 <tr>
-                    <th style="width: 35%;">大学・学部</th>
-                    <th style="width: 25%;">完了年数</th>
-                    <th style="width: 25%;">予定日程</th>
-                    <th style="width: 15%;">操作</th>
+                    <th style="width: 30%;">大学・学部</th>
+                    <th style="width: 20%;">科目</th>
+                    <th style="width: 15%;">年数</th>
+                    <th style="width: 22%;">予定日程</th>
+                    <th style="width: 13%;">操作</th>
                 </tr>
             </thead>
-            <tbody id="pastExamTbody">
-                <!-- JavaScriptで動的生成 -->
-            </tbody>
+            <tbody id="pastExamTbody"></tbody>
         </table>
     </div>
 
+    <!-- 過去問進捗 棒グラフセクション -->
+    <div class="section">
+        <h2>過去問の進捗（科目別グラフ）</h2>
+        <div class="filter-tabs" id="chartFilterTabs">
+            <button class="filter-tab active" onclick="setChartFilter('すべて')">すべて</button>
+            <button class="filter-tab" onclick="setChartFilter('英語')">英語</button>
+            <button class="filter-tab" onclick="setChartFilter('国語')">国語</button>
+            <button class="filter-tab" onclick="setChartFilter('日本史')">日本史</button>
+        </div>
+        <div class="chart-container" id="chartContainer"></div>
+    </div>
+
     <script>
-        // 日付を 'YYYY-MM-DD' 形式で取得する関数
         function getTodayKey() {
             const d = new Date();
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -299,8 +406,8 @@
         const dateObj = new Date();
         document.getElementById('currentDateDisplay').innerText = dateObj.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 
-        // --- タスク履歴データの管理 ---
-        let historyData = JSON.parse(localStorage.getItem('study_history_v4')) || {};
+        // --- タスク履歴データ ---
+        let historyData = JSON.parse(localStorage.getItem('study_history_v5')) || {};
 
         if (!historyData[todayKey]) {
             const keys = Object.keys(historyData).sort();
@@ -317,12 +424,12 @@
         }
 
         function saveHistory() {
-            localStorage.setItem('study_history_v4', JSON.stringify(historyData));
+            localStorage.setItem('study_history_v5', JSON.stringify(historyData));
         }
 
         let currentTasks = historyData[todayKey];
 
-        function render() {
+        function renderTasks() {
             const morningList = document.getElementById('morningList');
             const afternoonList = document.getElementById('afternoonList');
             morningList.innerHTML = '';
@@ -377,14 +484,14 @@
             document.getElementById('taskName').value = '';
             historyData[todayKey] = currentTasks;
             saveHistory();
-            render();
+            renderTasks();
         }
 
         function toggleComplete(index) {
             currentTasks[index].completed = !currentTasks[index].completed;
             historyData[todayKey] = currentTasks;
             saveHistory();
-            render();
+            renderTasks();
         }
 
         function moveTask(index, direction) {
@@ -395,28 +502,64 @@
             currentTasks[targetIndex] = temp;
             historyData[todayKey] = currentTasks;
             saveHistory();
-            render();
+            renderTasks();
         }
 
         function deleteTask(index) {
             currentTasks.splice(index, 1);
             historyData[todayKey] = currentTasks;
             saveHistory();
-            render();
+            renderTasks();
         }
 
-        // --- 1週間カレンダー ＆ 詳細表示 ---
+        // --- 1ヶ月カレンダー機能 ---
+        let calendarYear = dateObj.getFullYear();
+        let calendarMonth = dateObj.getMonth(); // 0-11
+
+        function changeMonth(direction) {
+            calendarMonth += direction;
+            if (calendarMonth > 11) {
+                calendarMonth = 0;
+                calendarYear++;
+            } else if (calendarMonth < 0) {
+                calendarMonth = 11;
+                calendarYear--;
+            }
+            renderCalendar();
+        }
+
         function renderCalendar() {
-            const calendarGrid = document.getElementById('calendarGrid');
-            calendarGrid.innerHTML = '';
+            const grid = document.getElementById('calendarGrid');
+            const title = document.getElementById('calendarMonthTitle');
+            grid.innerHTML = '';
+            title.innerText = `${calendarYear}年 ${calendarMonth + 1}月`;
+
+            // 曜日のヘッダー
             const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+            weekdays.forEach(w => {
+                const div = document.createElement('div');
+                div.className = 'calendar-weekday';
+                div.innerText = w;
+                grid.appendChild(div);
+            });
 
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const firstDayIndex = new Date(calendarYear, calendarMonth, 1).getDay();
+            const totalDays = new Date(calendarYear, calendarMonth + 1, 0).getDate();
 
-                let dayRateStr = '-';
+            // 前月の空白セル
+            for (let i = 0; i < firstDayIndex; i++) {
+                const div = document.createElement('div');
+                div.className = 'calendar-day empty';
+                grid.appendChild(div);
+            }
+
+            // 日付セル
+            for (let day = 1; day <= totalDays; day++) {
+                const mStr = String(calendarMonth + 1).padStart(2, '0');
+                const dStr = String(day).padStart(2, '0');
+                const dateKey = `${calendarYear}-${mStr}-${dStr}`;
+
+                let dayRateStr = '';
                 const dayTasks = historyData[dateKey];
                 if (dayTasks && dayTasks.length > 0) {
                     const completed = dayTasks.filter(t => t.completed).length;
@@ -425,52 +568,78 @@
                     dayRateStr = '0%';
                 }
 
-                const dayDiv = document.createElement('div');
-                dayDiv.className = 'calendar-day' + (dateKey === todayKey ? ' today' : '');
-                dayDiv.innerHTML = `
-                    <div>${d.getMonth() + 1}/${d.getDate()}(${weekdays[d.getDay()]})</div>
-                    <div class="day-rate">${dayRateStr}</div>
+                // この日の過去問予定を検索
+                const matchedExams = pastExams.filter(e => e.date === dateKey);
+
+                const div = document.createElement('div');
+                div.className = 'calendar-day' + (dateKey === todayKey ? ' today' : '');
+                
+                let examHtml = '';
+                matchedExams.forEach(e => {
+                    examHtml += `<div class="has-exam" title="${e.uni} (${e.subject})">📅 ${e.uni}</div>`;
+                });
+
+                div.innerHTML = `
+                    <div>${day}</div>
+                    <div>
+                        <div class="day-rate">${dayRateStr}</div>
+                        ${examHtml}
+                    </div>
                 `;
-                dayDiv.onclick = () => showDayDetail(dateKey);
-                calendarGrid.appendChild(dayDiv);
+                div.onclick = () => showMonthDayDetail(dateKey);
+                grid.appendChild(div);
             }
         }
 
-        function showDayDetail(dateKey) {
+        function showMonthDayDetail(dateKey) {
             const detailBox = document.getElementById('dayDetailBox');
             const detailTitle = document.getElementById('detailTitle');
-            const detailList = document.getElementById('detailList');
-            detailList.innerHTML = '';
+            const detailContent = document.getElementById('detailContent');
+            detailContent.innerHTML = '';
 
             detailBox.style.display = 'block';
-            detailTitle.innerText = `【 ${dateKey} の詳細タスク 】`;
+            detailTitle.innerText = `【 ${dateKey} の詳細スケジュール 】`;
 
+            // タスク表示
             const tasks = historyData[dateKey];
+            let taskHtml = '<strong>【勉強タスク】</strong>';
             if (!tasks || tasks.length === 0) {
-                detailList.innerHTML = '<li>この日の記録はありません。</li>';
-                return;
+                taskHtml += '<p style="margin:4px 0 10px 0; font-size:0.85rem; color:#666;">この日のタスク記録はありません。</p>';
+            } else {
+                taskHtml += '<ul style="margin:4px 0 10px 0; padding-left:15px; font-size:0.85rem;">';
+                tasks.forEach(t => {
+                    taskHtml += `<li>[${t.time}] <span style="font-weight:bold;">${t.subject}</span>: ${t.name} － <b>${t.completed ? '✅ 完了' : '❌ 未完了'}</b></li>`;
+                });
+                taskHtml += '</ul>';
             }
 
-            tasks.forEach(t => {
-                const li = document.createElement('li');
-                li.style.background = '#fff';
-                li.style.padding = '6px';
-                li.style.marginBottom = '4px';
-                li.style.border = '1px solid #e0e0e0';
-                li.innerHTML = `[${t.time}] <span style="font-weight:bold;">${t.subject}</span>: ${t.name} － <b>${t.completed ? '✅ 完了' : '❌ 未完了'}</b>`;
-                detailList.appendChild(li);
-            });
+            // 過去問予定表示
+            const exams = pastExams.filter(e => e.date === dateKey);
+            let examHtml = '<strong>【過去問の予定】</strong>';
+            if (exams.length === 0) {
+                examHtml += '<p style="margin:4px 0 0 0; font-size:0.85rem; color:#666;">この日に予定されている過去問はありません。</p>';
+            } else {
+                examHtml += '<ul style="margin:4px 0 0 0; padding-left:15px; font-size:0.85rem;">';
+                exams.forEach(e => {
+                    examHtml += `<li><b>${e.uni}</b> （科目: ${e.subject} / ${e.years}年分）</li>`;
+                });
+                examHtml += '</ul>';
+            }
+
+            detailContent.innerHTML = taskHtml + examHtml;
         }
 
         // --- 過去問管理機能 ---
-        let pastExams = JSON.parse(localStorage.getItem('study_past_exams')) || [
-            { id: 1, uni: '早大・社会科学部', years: '3年分', date: '' },
-            { id: 2, uni: '早大・教育学部', years: '2年分', date: '' },
-            { id: 3, uni: '早大・文学部', years: '0年分', date: '' }
+        let pastExams = JSON.parse(localStorage.getItem('study_past_exams_v2')) || [
+            { id: 1, uni: '早大・社会科学部', subject: '英語', years: 3, date: '' },
+            { id: 2, uni: '早大・教育学部', subject: '国語', years: 2, date: '' }
         ];
 
         function savePastExams() {
-            localStorage.setItem('study_past_exams', JSON.stringify(pastExams));
+            localStorage.setItem('study_past_exams_v2', JSON.stringify(pastExams));
+            renderPastExams();
+            renderChart();
+            renderCalendar();
         }
 
         function renderPastExams() {
@@ -481,7 +650,14 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><input type="text" class="table-input" value="${item.uni}" onchange="updatePastExam(${index}, 'uni', this.value)"></td>
-                    <td><input type="text" class="table-input" value="${item.years}" onchange="updatePastExam(${index}, 'years', this.value)"></td>
+                    <td>
+                        <select class="table-input" onchange="updatePastExam(${index}, 'subject', this.value)">
+                            <option value="英語" ${item.subject === '英語' ? 'selected' : ''}>英語</option>
+                            <option value="国語" ${item.subject === '国語' ? 'selected' : ''}>国語</option>
+                            <option value="日本史" ${item.subject === '日本史' ? 'selected' : ''}>日本史</option>
+                        </select>
+                    </td>
+                    <td><input type="number" class="table-input" value="${item.years}" min="0" max="30" onchange="updatePastExam(${index}, 'years', Number(this.value))"></td>
                     <td><input type="date" class="table-input" value="${item.date}" onchange="updatePastExam(${index}, 'date', this.value)"></td>
                     <td><button class="small-btn" onclick="deletePastExam(${index})">削除</button></td>
                 `;
@@ -491,7 +667,8 @@
 
         function addPastExam() {
             const uni = document.getElementById('pqUni').value.trim();
-            const years = document.getElementById('pqYears').value.trim();
+            const subject = document.getElementById('pqSubject').value;
+            const years = Number(document.getElementById('pqYears').value) || 1;
             const date = document.getElementById('pqDate').value;
 
             if (!uni) {
@@ -499,12 +676,11 @@
                 return;
             }
 
-            pastExams.push({ id: Date.now(), uni, years: years || '0年分', date });
+            pastExams.push({ id: Date.now(), uni, subject, years, date });
             document.getElementById('pqUni').value = '';
-            document.getElementById('pqYears').value = '';
+            document.getElementById('pqYears').value = '1';
             document.getElementById('pqDate').value = '';
             savePastExams();
-            renderPastExams();
         }
 
         function updatePastExam(index, field, value) {
@@ -515,12 +691,57 @@
         function deletePastExam(index) {
             pastExams.splice(index, 1);
             savePastExams();
-            renderPastExams();
         }
 
-        // 初期描画
-        render();
+        // --- 過去問 棒グラフ機能 ---
+        let currentChartFilter = 'すべて';
+
+        function setChartFilter(filter) {
+            currentChartFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.innerText === filter);
+            });
+            renderChart();
+        }
+
+        function renderChart() {
+            const container = document.getElementById('chartContainer');
+            container.innerHTML = '';
+
+            // フィルターに応じたデータ抽出
+            let filtered = pastExams;
+            if (currentChartFilter !== 'すべて') {
+                filtered = pastExams.filter(e => e.subject === currentChartFilter);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#666; font-size:0.9rem; margin:10px 0;">データがありません</p>';
+                return;
+            }
+
+            // 最大年数を見つけてバーの長さをパーセンテージ化する（最大値が少なくとも5年分くらいになるようにする）
+            let maxYears = Math.max(...filtered.map(e => e.years), 5);
+
+            filtered.forEach(e => {
+                let percent = Math.min(100, (e.years / maxYears) * 100);
+
+                const row = document.createElement('div');
+                row.className = 'chart-row';
+                row.innerHTML = `
+                    <div class="chart-label" title="${e.uni} (${e.subject})">${e.uni} <span style="font-size:0.75rem; color:#666;">[${e.subject}]</span></div>
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-bar" style="width: ${percent}%;"></div>
+                        <div class="chart-value">${e.years} 年分</div>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        // 初期実行
+        renderTasks();
         renderPastExams();
+        renderChart();
     </script>
 </body>
 </html>
