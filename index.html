@@ -22,23 +22,26 @@
             margin-bottom: 15px;
             color: #666;
         }
-        /* ページ切り替えタブ */
+        /* ページ切り替えタブ（4分割） */
         .tab-nav {
             display: flex;
-            gap: 10px;
+            gap: 6px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         .tab-btn {
             flex: 1;
-            padding: 12px;
+            min-width: 110px;
+            padding: 10px 6px;
             background: #e0e0e0;
             border: none;
             border-radius: 6px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: bold;
             cursor: pointer;
             color: #333;
             transition: background 0.2s;
+            text-align: center;
         }
         .tab-btn.active {
             background: #4a90e2;
@@ -185,7 +188,7 @@
             background: #f9f9f9;
             border: 1px solid #ddd;
             border-radius: 4px;
-            min-height: 60px;
+            min-height: 65px;
             padding: 4px;
             font-size: 0.8rem;
             cursor: pointer;
@@ -277,14 +280,16 @@
     <h1>受験勉強タスク＆AI分析アプリ</h1>
     <div class="date-display" id="currentDateDisplay"></div>
 
-    <!-- ページ切り替えタブ -->
+    <!-- ページ切り替えタブ（4分割） -->
     <div class="tab-nav">
-        <button class="tab-btn active" id="btnTabHome" onclick="switchTab('home')">📝 記録・タスク管理</button>
-        <button class="tab-btn" id="btnTabAnalysis" onclick="switchTab('analysis')">🤖 AI分析レポート</button>
+        <button class="tab-btn active" id="btnTabTask" onclick="switchTab('task')">🏠 タスク管理</button>
+        <button class="tab-btn" id="btnTabCalendar" onclick="switchTab('calendar')">📅 カレンダー</button>
+        <button class="tab-btn" id="btnTabExam" onclick="switchTab('exam')">📚 過去問・反省</button>
+        <button class="tab-btn" id="btnTabAnalysis" onclick="switchTab('analysis')">🤖 AI分析</button>
     </div>
 
-    <!-- ================= 1. 記録・タスク管理ページ ================= -->
-    <div class="page-view active" id="pageHome">
+    <!-- ================= 1. タスク管理ページ ================= -->
+    <div class="page-view active" id="pageTask">
         <!-- 今日の完遂率 -->
         <div class="section">
             <h2>今日の完遂率</h2>
@@ -321,10 +326,13 @@
             <h2>午後</h2>
             <ul id="afternoonList"></ul>
         </div>
+    </div>
 
-        <!-- 1ヶ月カレンダー -->
+
+    <!-- ================= 2. カレンダーページ ================= -->
+    <div class="page-view" id="pageCalendar">
         <div class="section">
-            <h2>1ヶ月カレンダー（クリックして詳細確認）</h2>
+            <h2>1ヶ月カレンダー（日付クリックで詳細確認）</h2>
             <div class="calendar-header">
                 <button onclick="changeMonth(-1)">◀ 前月</button>
                 <h3 id="calendarMonthTitle" style="margin:0; font-size:1.1rem;"></h3>
@@ -337,11 +345,14 @@
                 <div id="detailContent"></div>
             </div>
         </div>
+    </div>
 
-        <!-- 過去問演習・反省ノート -->
+
+    <!-- ================= 3. 過去問・反省ノートページ ================= -->
+    <div class="page-view" id="pageExam">
         <div class="section">
             <h2>過去問演習・得点率・反省ノート</h2>
-            <p style="font-size:0.85rem; color:#666; margin-top:0;">志望学部ごとに過去問の得点率、大問別正答率、反省点を記録できます。</p>
+            <p style="font-size:0.85rem; color:#666; margin-top:0;">志望学部ごとに過去問の得点率、大問別正答率、反省点を記録できます（「📝反省」ボタンで詳細入力）。</p>
             
             <div class="input-group" style="margin-bottom: 10px;">
                 <select id="pqUni" style="flex:2;">
@@ -367,7 +378,7 @@
     </div>
 
 
-    <!-- ================= 2. AI分析レポートページ（別ページ） ================= -->
+    <!-- ================= 4. AI分析ページ ================= -->
     <div class="page-view" id="pageAnalysis">
         <div class="section">
             <h2>志望学部別 傾向まとめ ＆ AIパーソナル分析レポート</h2>
@@ -404,22 +415,27 @@
         const dateObj = new Date();
         document.getElementById('currentDateDisplay').innerText = dateObj.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 
-        // タブ切り替え関数
+        // 4分割タブ切り替え関数
         function switchTab(tabName) {
-            document.getElementById('pageHome').classList.remove('active');
-            document.getElementById('pageAnalysis').classList.remove('active');
-            document.getElementById('btnTabHome').classList.remove('active');
-            document.getElementById('btnTabAnalysis').classList.remove('active');
+            const tabs = ['task', 'calendar', 'exam', 'analysis'];
+            tabs.forEach(t => {
+                document.getElementById('page' + capitalize(t)).classList.remove('active');
+                document.getElementById('btnTab' + capitalize(t)).classList.remove('active');
+            });
 
-            if (tabName === 'home') {
-                document.getElementById('pageHome').classList.add('active');
-                document.getElementById('btnTabHome').classList.add('active');
-            } else {
-                document.getElementById('pageAnalysis').classList.add('active');
-                document.getElementById('btnTabAnalysis').classList.add('active');
-                runAiAnalysis(); // 分析ページを開いたときに自動実行
+            document.getElementById('page' + capitalize(tabName)).classList.add('active');
+            document.getElementById('btnTab' + capitalize(tabName)).classList.add('active');
+
+            if (tabName === 'analysis') {
+                runAiAnalysis();
                 renderChart();
+            } else if (tabName === 'calendar') {
+                renderCalendar();
             }
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
         }
 
         // タスク履歴データ
@@ -476,7 +492,6 @@
             let rate = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
             document.getElementById('progressBar').style.width = rate + '%';
             document.getElementById('progressText').innerText = `${rate}% (${completedCount} / ${totalCount} 完了)`;
-            renderCalendar();
         }
 
         function addTask() {
@@ -531,6 +546,7 @@
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid');
             const title = document.getElementById('calendarMonthTitle');
+            if (!grid || !title) return;
             grid.innerHTML = '';
             title.innerText = `${calendarYear}年 ${calendarMonth + 1}月`;
 
@@ -635,6 +651,7 @@
 
         function renderPastExams() {
             const container = document.getElementById('pastExamListContainer');
+            if (!container) return;
             container.innerHTML = '';
             if (pastExams.length === 0) {
                 container.innerHTML = '<p style="text-align:center; color:#666; font-size:0.9rem;">過去問の登録がまだありません。</p>';
@@ -736,9 +753,10 @@
         function runAiAnalysis() {
             const summaryContainer = document.getElementById('facultySummaryContainer');
             const aiContainer = document.getElementById('aiReportContainer');
+            if (!summaryContainer || !aiContainer) return;
             
             if (pastExams.length === 0) {
-                summaryContainer.innerHTML = '<p style="font-size:0.9rem; color:#666;">過去問データがありません。「記録・タスク管理」ページから過去問を追加してください。</p>';
+                summaryContainer.innerHTML = '<p style="font-size:0.9rem; color:#666;">過去問データがありません。「過去問・反省」タブから過去問を追加してください。</p>';
                 aiContainer.innerHTML = '';
                 return;
             }
@@ -831,6 +849,7 @@
 
         function renderChart() {
             const container = document.getElementById('chartContainer');
+            if (!container) return;
             container.innerHTML = '';
             let filtered = currentChartFilter === 'すべて' ? pastExams : pastExams.filter(e => e.subject === currentChartFilter);
 
@@ -864,7 +883,7 @@
         // 初期実行
         renderTasks();
         renderPastExams();
-        renderChart();
+        renderCalendar();
     </script>
 </body>
 </html>
