@@ -2,552 +2,221 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Plan - 勉強計画</title>
+    <title>受験勉強タスク管理</title>
     <style>
-        :root {
-            --bg-color: #f7f8fa;
-            --card-bg: #ffffff;
-            --text-main: #2d3748;
-            --text-sub: #718096;
-            --border-color: #e2e8f0;
-            
-            /* ご指定のくすみカラー */
-            --color-eng: #d98895;      /* 英語 (くすみピンク) */
-            --color-jp: #e09f6e;       /* 国語 (くすみオレンジ) */
-            --color-hist: #7c9d8e;     /* 日本史 (くすみ緑) */
-            
-            --primary: #5c6ac4;
-            --primary-hover: #4754ab;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            max-width: 750px;
-            margin: 0 auto;
+            font-family: sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
             padding: 20px;
-            line-height: 1.5;
+            background-color: #f9f9f9;
         }
-
-        header {
+        h1 {
             text-align: center;
-            margin-bottom: 25px;
+            color: #333;
         }
-
-        header h1 {
-            color: #2d3748;
-            font-size: 1.8rem;
-            margin-bottom: 5px;
-        }
-
-        header p {
-            color: var(--text-sub);
-            font-size: 0.9rem;
-        }
-
-        .card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-        }
-
-        h2 {
-            font-size: 1.1rem;
-            color: #4a5568;
-            margin-top: 0;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 8px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        @media (max-width: 500px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        select, input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 15px;
+        .section {
             background: #fff;
-            color: var(--text-main);
-            box-sizing: border-box;
-        }
-
-        select:focus, input[type="text"]:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 15px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.2s;
-        }
-
-        .btn:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .btn-sub {
-            background-color: #edf2f7;
-            color: #4a5568;
-            font-size: 0.85rem;
-            padding: 5px 10px;
-            width: auto;
-        }
-        .btn-sub:hover {
-            background-color: #e2e8f0;
-        }
-
-        /* 科目カードごとのスタイル */
-        .subject-section {
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            overflow: hidden;
-            background: #fff;
-        }
-
-        .subject-header {
-            padding: 12px 15px;
-            color: white;
-            font-weight: bold;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .header-eng { background-color: var(--color-eng); }
-        .header-jp { background-color: var(--color-jp); }
-        .header-hist { background-color: var(--color-hist); }
-
-        .subject-body {
             padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
-        .time-slot-block {
-            margin-bottom: 12px;
+        .section h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
         }
-        .time-slot-block:last-child {
-            margin-bottom: 0;
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
         }
-
-        .time-label {
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: var(--text-sub);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        input, select, button {
+            padding: 8px;
+            font-size: 1rem;
         }
-
+        input[type="text"] {
+            flex: 1;
+        }
         ul {
             list-style: none;
             padding: 0;
-            margin: 0;
         }
-
         li {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 10px;
+            padding: 10px;
+            margin-bottom: 8px;
             border-radius: 6px;
-            margin-bottom: 6px;
-            background: #fafbfc;
-            border: 1px solid #edf2f7;
-            transition: all 0.2s;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-
-        li:last-child {
-            margin-bottom: 0;
-        }
-
-        li.completed {
-            background: #f1f5f9;
-            opacity: 0.6;
-        }
-
-        li.completed span.task-text {
-            text-decoration: line-through;
-            color: var(--text-sub);
-        }
-
-        .task-left {
+        .task-info {
             display: flex;
             align-items: center;
             gap: 10px;
             flex: 1;
-            overflow: hidden;
         }
-
-        input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: var(--primary);
+        .completed span {
+            text-decoration: line-through;
+            color: #888;
         }
-
-        .task-text {
-            word-break: break-all;
-            font-size: 0.95rem;
-        }
-
-        .task-actions {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .order-btn {
-            background: #edf2f7;
-            border: none;
-            color: #4a5568;
-            cursor: pointer;
-            font-size: 11px;
-            padding: 3px 6px;
+        .tag {
+            font-size: 0.8rem;
+            padding: 2px 6px;
             border-radius: 4px;
+            font-weight: bold;
         }
-        .order-btn:hover {
-            background-color: #cbd5e0;
-        }
+        /* ご要望の科目カラー */
+        .tag-english { background-color: #ffccf2; color: #660033; } /* 淡いピンク */
+        .tag-japanese { background-color: #ffe5cc; color: #663300; } /* 淡いオレンジ */
+        .tag-history { background-color: #ccffcc; color: #003300; } /* 淡い緑 */
 
-        .delete-btn {
+        .actions button {
             background: none;
-            border: none;
-            color: #a0aec0;
+            border: 1px solid #ccc;
             cursor: pointer;
-            font-size: 14px;
-            padding: 3px 6px;
+            padding: 2px 6px;
             border-radius: 4px;
+            margin-left: 2px;
         }
-        .delete-btn:hover {
-            background-color: #fed7d7;
-            color: #e53e3e;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 8px;
-        }
-        .section-header h2 {
-            margin: 0;
-            border: none;
-            padding: 0;
-        }
-
-        .empty-msg {
-            color: var(--text-sub);
-            font-size: 0.85rem;
-            padding: 4px 0;
-            margin: 0;
+        .actions button:hover {
+            background: #eee;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>🎯 勉強計画タスク</h1>
-        <p>今日も一歩ずつ、触れたかどうかをチェックしていこう</p>
-    </header>
+    <h1>受験勉強タスク管理</h1>
 
-    <!-- 毎日やること（ルーティン） -->
-    <div class="card">
-        <div class="section-header">
-            <h2>🔥 毎日やること（ルーティン）</h2>
-            <button class="btn btn-sub" onclick="openRoutineModal()">ルーティン編集</button>
-        </div>
-        <ul id="routineList"></ul>
-    </div>
-
-    <!-- タスク追加カード -->
-    <div class="card">
-        <h2>✏️ タスク・参考書を追加</h2>
-        <div class="form-grid">
-            <select id="subject">
-                <option value="eng">英語（くすみピンク）</option>
-                <option value="jp">国語（くすみオレンジ）</option>
-                <option value="hist">日本史（くすみ緑）</option>
-            </select>
+    <!-- タスク追加セクション -->
+    <div class="section">
+        <h2>タスクを追加</h2>
+        <div class="input-group">
             <select id="timeSlot">
-                <option value="am">🌅 午前</option>
-                <option value="pm">🌙 午後</option>
+                <option value="午前">午前</option>
+                <option value="午後">午後</option>
             </select>
+            <select id="subject">
+                <option value="英語">英語</option>
+                <option value="国語">国語</option>
+                <option value="日本史">日本史</option>
+            </select>
+            <input type="text" id="taskName" placeholder="タスク名を入力（例：英単語、現代文など）">
+            <button onclick="addTask()">追加</button>
         </div>
-        <div style="margin-bottom: 10px;">
-            <input type="text" id="taskInput" placeholder="例：システム英単語を読む / 過去問にざっと目を通す">
-        </div>
-        <button class="btn" onclick="addTask()">計画に追加する</button>
     </div>
 
-    <!-- 科目ごとの表示エリア -->
-    <div id="subjectsContainer"></div>
+    <!-- 午前リスト -->
+    <div class="section">
+        <h2>午前</h2>
+        <ul id="morningList"></ul>
+    </div>
 
-    <!-- ルーティン編集用カード -->
-    <div class="card" id="routineEditCard" style="display:none; background: #fffaf0; border: 1px dashed var(--color-jp);">
-        <h2>⚙️ 毎日やるコト（ルーティン）の管理</h2>
-        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <input type="text" id="routineInput" placeholder="例：英単語 / 漢字など">
-            <button class="btn" style="width: auto;" onclick="addRoutineDef()">追加</button>
-        </div>
-        <ul id="routineDefList" style="margin-bottom: 10px;"></ul>
-        <button class="btn btn-sub" onclick="closeRoutineModal()">閉じる</button>
+    <!-- 午後リスト -->
+    <div class="section">
+        <h2>午後</h2>
+        <ul id="afternoonList"></ul>
     </div>
 
     <script>
-        // --- データ管理 ---
-        let routineDefs = JSON.parse(localStorage.getItem('study_routine_defs_v4')) || [
-            { id: 1, text: '英単語に目を通す' },
-            { id: 2, text: '日本史一問一答' }
+        let tasks = JSON.parse(localStorage.getItem('study_tasks')) || [
+            { id: 1, time: '午前', subject: '英語', name: '英単語', completed: false },
+            { id: 2, time: '午前', subject: '国語', name: '現代文', completed: false },
+            { id: 3, time: '午後', subject: '日本史', name: '一問一答', completed: false }
         ];
 
-        const todayStr = new Date().toDateString();
-        let lastDate = localStorage.getItem('study_last_date_v4') || todayStr;
-
-        let tasks = JSON.parse(localStorage.getItem('study_tasks_v4')) || [];
-        let routineStatus = JSON.parse(localStorage.getItem('study_routine_status_v4')) || {};
-
-        if (lastDate !== todayStr) {
-            routineStatus = {};
-            localStorage.setItem('study_last_date_v4', todayStr);
+        function saveTasks() {
+            localStorage.setItem('study_tasks', JSON.stringify(tasks));
         }
 
-        function saveAndRender() {
-            localStorage.setItem('study_tasks_v4', JSON.stringify(tasks));
-            localStorage.setItem('study_routine_defs_v4', JSON.stringify(routineDefs));
-            localStorage.setItem('study_routine_status_v4', JSON.stringify(routineStatus));
-            render();
+        function renderTasks() {
+            const morningList = document.getElementById('morningList');
+            const afternoonList = document.getElementById('afternoonList');
+            morningList.innerHTML = '';
+            afternoonList.innerHTML = '';
+
+            tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                if (task.completed) li.classList.add('completed');
+
+                let tagClass = '';
+                if (task.subject === '英語') tagClass = 'tag-english';
+                else if (task.subject === '国語') tagClass = 'tag-japanese';
+                else if (task.subject === '日本史') tagClass = 'tag-history';
+
+                li.innerHTML = `
+                    <div class="task-info">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} onclick="toggleComplete(${index})">
+                        <span class="tag ${tagClass}">${task.subject}</span>
+                        <span>${task.name}</span>
+                    </div>
+                    <div class="actions">
+                        <button onclick="moveTask(${index}, -1)">↑</button>
+                        <button onclick="moveTask(${index}, 1)">↓</button>
+                        <button onclick="deleteTask(${index})">削除</button>
+                    </div>
+                `;
+
+                if (task.time === '午前') {
+                    morningList.appendChild(li);
+                } else {
+                    afternoonList.appendChild(li);
+                }
+            });
         }
 
-        // --- タスク操作 ---
         function addTask() {
-            const subject = document.getElementById('subject').value;
             const timeSlot = document.getElementById('timeSlot').value;
-            const textInput = document.getElementById('taskInput');
-            const text = textInput.value.trim();
+            const subject = document.getElementById('subject').value;
+            const taskName = document.getElementById('taskName').value.trim();
 
-            if (text === '') return;
+            if (!taskName) {
+                alert('タスク名を入力してください');
+                return;
+            }
 
-            const newTask = {
+            tasks.push({
                 id: Date.now(),
+                time: timeSlot,
                 subject: subject,
-                slot: timeSlot,
-                text: text,
+                name: taskName,
                 completed: false
-            };
+            });
 
-            tasks.push(newTask);
-            textInput.value = '';
-            saveAndRender();
+            document.getElementById('taskName').value = '';
+            saveTasks();
+            renderTasks();
         }
 
-        function toggleTask(id) {
-            tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
-            saveAndRender();
+        function toggleComplete(index) {
+            tasks[index].completed = !tasks[index].completed;
+            saveTasks();
+            renderTasks();
         }
 
-        function deleteTask(id) {
-            tasks = tasks.filter(t => t.id !== id);
-            saveAndRender();
-        }
-
-        function moveTask(id, direction) {
-            const index = tasks.findIndex(t => t.id === id);
-            if (index === -1) return;
-
-            const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        function moveTask(index, direction) {
+            const targetIndex = index + direction;
             if (targetIndex < 0 || targetIndex >= tasks.length) return;
-
+            
             const temp = tasks[index];
             tasks[index] = tasks[targetIndex];
             tasks[targetIndex] = temp;
 
-            saveAndRender();
+            saveTasks();
+            renderTasks();
         }
 
-        // --- ルーティン操作 ---
-        function toggleRoutine(id) {
-            routineStatus[id] = !routineStatus[id];
-            saveAndRender();
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            saveTasks();
+            renderTasks();
         }
 
-        function addRoutineDef() {
-            const input = document.getElementById('routineInput');
-            const text = input.value.trim();
-            if(!text) return;
-            routineDefs.push({ id: Date.now(), text: text });
-            input.value = '';
-            saveAndRender();
-        }
-
-        function deleteRoutineDef(id) {
-            routineDefs = routineDefs.filter(r => r.id !== id);
-            delete routineStatus[id];
-            saveAndRender();
-        }
-
-        function openRoutineModal() {
-            document.getElementById('routineEditCard').style.display = 'block';
-            renderRoutineDefs();
-        }
-
-        function closeRoutineModal() {
-            document.getElementById('routineEditCard').style.display = 'none';
-        }
-
-        // --- 描画処理 ---
-        function render() {
-            renderRoutines();
-            renderSubjects();
-        }
-
-        function renderRoutines() {
-            const list = document.getElementById('routineList');
-            list.innerHTML = '';
-
-            if (routineDefs.length === 0) {
-                list.innerHTML = '<p class="empty-msg">ルーティンが登録されていません</p>';
-                return;
-            }
-
-            routineDefs.forEach(r => {
-                const isChecked = !!routineStatus[r.id];
-                const li = document.createElement('li');
-                if (isChecked) li.classList.add('completed');
-
-                li.innerHTML = `
-                    <div class="task-left">
-                        <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="toggleRoutine(${r.id})">
-                        <span class="task-text">${escapeHtml(r.text)}</span>
-                    </div>
-                `;
-                list.appendChild(li);
-            });
-        }
-
-        function renderRoutineDefs() {
-            const list = document.getElementById('routineDefList');
-            list.innerHTML = '';
-            routineDefs.forEach(r => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <span>${escapeHtml(r.text)}</span>
-                    <button class="delete-btn" onclick="deleteRoutineDef(${r.id})">削除</button>
-                `;
-                list.appendChild(li);
-            });
-        }
-
-        function renderSubjects() {
-            const container = document.getElementById('subjectsContainer');
-            container.innerHTML = '';
-
-            const subjectConfig = [
-                { key: 'eng', name: '英語', headerClass: 'header-eng' },
-                { key: 'jp', name: '国語', headerClass: 'header-jp' },
-                { key: 'hist', name: '日本史', headerClass: 'header-hist' }
-            ];
-
-            subjectConfig.forEach(sub => {
-                const subTasks = tasks.filter(t => t.subject === sub.key);
-                const amTasks = subTasks.filter(t => t.slot === 'am');
-                const pmTasks = subTasks.filter(t => t.slot === 'pm');
-
-                const section = document.createElement('div');
-                section.className = 'subject-section';
-
-                let html = `
-                    <div class="subject-header ${sub.headerClass}">
-                        <span>${sub.name}</span>
-                    </div>
-                    <div class="subject-body">
-                `;
-
-                // 午前ブロック
-                html += `<div class="time-slot-block"><div class="time-label">🌅 午前</div>`;
-                if (amTasks.length === 0) {
-                    html += `<p class="empty-msg">タスクなし</p>`;
-                } else {
-                    html += `<ul>`;
-                    amTasks.forEach(t => {
-                        html += buildTaskHtml(t);
-                    });
-                    html += `</ul>`;
-                }
-                html += `</div>`;
-
-                // 午後ブロック
-                html += `<div class="time-slot-block" style="margin-top: 15px;"><div class="time-label">🌙 午後</div>`;
-                if (pmTasks.length === 0) {
-                    html += `<p class="empty-msg">タスクなし</p>`;
-                } else {
-                    html += `<ul>`;
-                    pmTasks.forEach(t => {
-                        html += buildTaskHtml(t);
-                    });
-                    html += `</ul>`;
-                }
-                html += `</div>`;
-
-                html += `</div>`; // .subject-body
-                section.innerHTML = html;
-                container.appendChild(section);
-            });
-        }
-
-        function buildTaskHtml(t) {
-            return `
-                <li class="${t.completed ? 'completed' : ''}">
-                    <div class="task-left">
-                        <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTask(${t.id})">
-                        <span class="task-text">${escapeHtml(t.text)}</span>
-                    </div>
-                    <div class="task-actions">
-                        <button class="order-btn" onclick="moveTask(${t.id}, 'up')" title="上へ">⬆️</button>
-                        <button class="order-btn" onclick="moveTask(${t.id}, 'down')" title="下へ">⬇️</button>
-                        <button class="delete-btn" onclick="deleteTask(${t.id})" title="削除">✕</button>
-                    </div>
-                </li>
-            `;
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/[&<>'"]/g, 
-                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-            );
-        }
-
-        render();
+        renderTasks();
     </script>
 </body>
 </html>
